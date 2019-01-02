@@ -1,7 +1,7 @@
 from sqlalchemy import Column, Integer, String, DATETIME, \
     ForeignKey, Float, Enum
 from sqlalchemy.ext.declarative import declarative_base
-from sqlalchemy.orm import sessionmaker
+from sqlalchemy.orm import sessionmaker, relationship, backref
 import enum
 
 Base = declarative_base()
@@ -52,11 +52,12 @@ class Trackers(Base):
     current_status = Column('current_status',
                             Enum(StatusChoices))
     last_test_date = Column('last_test', DATETIME)
-    current_location = Column(Integer)
     purchase = Column('purchase', DATETIME)
     warranty_expiry = Column('warranty', DATETIME)
     owner = Column('owner', Enum(OwnerChoices))
     third_party_name = Column('third_party_name', String)
+    location_id = Column('location_id', ForeignKey('tracker_locations.id',
+                                                   ondelete='restrict', onupdate='restrict'))
 
 
 class TrackerLocations(Base):
@@ -64,6 +65,7 @@ class TrackerLocations(Base):
     __tablename__ = 'tracker_locations'
     id = Column('id', Integer, primary_key=True)
     types = Column(String)
+    trackers = relationship('Trackers')
     __mapper_args__ = {
         'polymorphic_on': types
     }
@@ -85,7 +87,7 @@ class Riders(TrackerLocations):
     email = Column('email', String)
 
     __mapper_args__ = {
-        'polymorphic_identity': 'rider'
+        'polymorphic_identity': 'riders'
     }
 
 # TODO split out specifics associated with this race into another table?
@@ -114,5 +116,3 @@ class PersonalLocations(TrackerLocations):
     __mapper_args__ = {
         'polymorphic_identity': 'personal_locations'
     }
-
-
