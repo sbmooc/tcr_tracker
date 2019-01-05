@@ -36,16 +36,16 @@ def commit_to_db(session):
         return False
 
 
-def insert_data(session, table_name: str, **kwargs):
+def insert_row(session, table_name: str, **kwargs):
     table = getattr(sys.modules[__name__], table_name)
     data_to_add = table(**kwargs)
     session.add(data_to_add)
     return commit_to_db(session)
 
 
-def delete_data(session, table_name: str, table_id: int):
+def delete_row(session, table_name: str, row_id: int):
     table = getattr(sys.modules[__name__], table_name)
-    obj = session.query(table).filter(table.id == table_id).first()
+    obj = session.query(table).filter(table.id == row_id).first()
     if obj:
         session.delete(obj)
         return True
@@ -53,5 +53,11 @@ def delete_data(session, table_name: str, table_id: int):
         return False
 
 
-def update_rider_details():
-    pass
+def update_row(session, table_name: str, row_id: int, update_values: dict):
+    table = getattr(sys.modules[__name__], table_name)
+    obj = session.query(table).filter(table.id == row_id).first()
+    for key, value in update_values.items():
+        obj.key = value
+    return commit_to_db(session)
+
+
