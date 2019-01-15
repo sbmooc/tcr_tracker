@@ -16,6 +16,8 @@ from sqlalchemy.engine.url import URL
 # session.add(add_rider)
 # session.commit()
 
+
+
 def build_session(drivername: str, username: str = None, password: str = None,
                   host: str = None, port: str = None, database: str = None,
                   query: str = None):
@@ -45,10 +47,10 @@ def insert_row(session, table_name: str, **kwargs):
 
 def delete_row(session, table_name: str, row_id: int):
     table = getattr(sys.modules[__name__], table_name)
-    obj = session.query(table).filter(table.id == row_id).first()
+    obj = session.query(Riders).filter(table.id == row_id).all()
     if obj:
         session.delete(obj)
-        return True
+        return commit_to_db(session)
     else:
         return False
 
