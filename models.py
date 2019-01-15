@@ -5,6 +5,7 @@ from sqlalchemy.orm import sessionmaker, relationship, backref
 import enum
 
 Base = declarative_base()
+Session = sessionmaker()
 
 
 class StatusChoices(enum.Enum):
@@ -61,7 +62,6 @@ class Trackers(Base):
 
 
 class TrackerLocations(Base):
-
     __tablename__ = 'tracker_locations'
     id = Column('id', Integer, primary_key=True)
     types = Column(String)
