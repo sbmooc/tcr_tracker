@@ -1,34 +1,21 @@
 import os
 import shutil
+import sqlalchemy
 import sqlite3
 from datetime import datetime
 from tempfile import mkdtemp
-from unittest import TestCase
+from unittest import TestCase, mock
 
 from sqlalchemy import create_engine
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import sessionmaker
 
 from models import Base, Riders, PhysicalLocations, Trackers
-from db_interactions import create, get_or_create, get_and_delete, set_up_engine
-from unittest.mock import patch
-
-class TestSetUpDB(TestCase):
-
-    def setUp(self):
-        self.env_1 = patch.dict('os.environ', {'DB_TYPE': 'sqlite:///', 'DB_URI': '/tmp/test_db.db'})
-
-    def test_set_up_engine(self):
-        test_engine = create_engine('sqlite:////tmp/test_db.db')
-        with self.env_1:
-            engine = set_up_engine()
-        self.assertEqual(engine.url, test_engine.url)
+from db_interactions import create, get_or_create, get_and_delete, set_up_engine, session_scope
+from unittest.mock import patch, Mock
 
 
-
-
-
-class TestManipulatingData(TestCase):
+class DBTests(TestCase):
 
     @classmethod
     def setUpClass(cls):
@@ -36,7 +23,9 @@ class TestManipulatingData(TestCase):
         cls.temp_db = os.path.join(cls.temp_, 'test_db.db')
         engine = create_engine('sqlite:///' + cls.temp_db, echo=True)
         Base.metadata.create_all(engine)
-        cls.Session = sessionmaker(bind=engine)
+        cls.TestSession = sessionmaker(bind=engine)
+        cls.env_1 = patch.dict('os.environ', {'DB_TYPE': 'sqlite:///', 'DB_URI': cls.temp_db})
+        cls.test_engine = create_engine('sqlite:///' + cls.temp_db)
 
     @classmethod
     def tearDownClass(cls):
@@ -46,14 +35,52 @@ class TestManipulatingData(TestCase):
         self.conn = sqlite3.connect(self.temp_db)
         self.cur = self.conn.cursor()
         self.tables = self.cur.execute('SELECT NAME FROM sqlite_master WHERE TYPE = "table";').fetchall()
-        self.session = self.Session()
+        self.test_session = self.TestSession()
 
     def tearDown(self):
-        self.session.close()
+        self.test_session.close()
         # clear all data in DB
         for table in self.tables:
             self.cur.execute(f'DELETE FROM {table[0]}')
         self.conn.commit()
+
+
+class TestSetUpDB(DBTests):
+
+    def test_set_up_engine(self):
+        with self.env_1:
+            engine = set_up_engine()
+        self.assertEqual(engine.url, self.test_engine.url)
+
+    def test_engine_None_with_no_env_vars(self):
+        self.assertIsNone(set_up_engine())
+
+    @mock.patch('db_interactions.set_up_engine')
+    def test_session_scope(self, mock_engine):
+        mock_engine.return_value = self.test_engine
+        with session_scope() as session:
+            rider = Riders(**{'id': 1})
+            session.add(rider)
+        result = self.cur.execute('SELECT * FROM RIDERS;').fetchall()[0][0]
+        self.assertEqual(result, 1)
+
+    @mock.patch('db_interactions.set_up_engine')
+    def test_session_scope_with_error(self, mock_engine):
+        sqlalchemy.orm.Session.rollback = Mock()
+        mock_engine.return_value = self.test_engine
+        rider = Riders(**{'id': 1})
+        with session_scope() as session:
+            session.add(rider)
+        rider_1 = Riders(**{'id': 1})
+        with self.assertRaises(IntegrityError):
+            with session_scope() as s:
+                s.add(rider_1)
+        #assert session was rolled back
+        sqlalchemy.orm.Session.rollback.assert_called()
+
+
+
+class TestManipulatingData(DBTests):
 
     def test_create(self):
         data_to_add = {
@@ -68,7 +95,7 @@ class TestManipulatingData(TestCase):
             'deposit_amount': 123.1,
             'email': 'hello@bob.com'
         }
-        create(self.session, Riders, **data_to_add)
+        create(self.test_session, Riders, **data_to_add)
         data_in_riders = self.cur.execute('SELECT * FROM RIDERS;').fetchall()[0]
         expected_results_riders = (1, 'Bobby', 'Hill', '123',
                             'solo', 'finished', 'male', 'paid', 123.1, 'hello@bob.com')
@@ -90,7 +117,7 @@ class TestManipulatingData(TestCase):
             'deposit_amount': 123.1,
             'email': 'hello@bob.com'
         }
-        test_get = get_or_create(self.session, Riders, **data_to_get)
+        test_get = get_or_create(self.test_session, Riders, **data_to_get)
         data_in_riders = self.cur.execute('SELECT * FROM RIDERS;').fetchall()[0]
         expected_results_riders = (1, 'Bobby', 'Hill', '123',
                                    'solo', 'finished', 'male', 'paid', 123.1, 'hello@bob.com')
@@ -124,7 +151,7 @@ class TestManipulatingData(TestCase):
             'INSERT INTO tracker_locations VALUES (?,?)',
             tuple(tracker_locations_test_data.values()))
         self.conn.commit()
-        test_get = get_or_create(self.session, Riders, **test_data)
+        test_get = get_or_create(self.test_session, Riders, **test_data)
         self.assertFalse(test_get[1])
         self.assertEqual(test_get[0][0].id, 1)
 
@@ -145,8 +172,8 @@ class TestManipulatingData(TestCase):
             'owner': 'lost_dot',
             'location_id': 1,
         }
-        get_or_create(self.session, PhysicalLocations, **physical_location)
-        get_or_create(self.session, Trackers, **tracker)
+        get_or_create(self.test_session, PhysicalLocations, **physical_location)
+        get_or_create(self.test_session, Trackers, **tracker)
         data_in_trackers = self.cur.execute('SELECT * FROM TRACKERS;').fetchall()[0]
         expected_results = (123456, '123456', 'working', '2017-01-01 00:00:00.000000',
                             '2015-01-02 00:00:00.000000', '2019-01-02 00:00:00.000000', 'lost_dot', None, 1)
@@ -165,7 +192,7 @@ class TestManipulatingData(TestCase):
             'warranty_expiry': datetime(2019, 1, 2),
             'owner': 'lost_dot',
         }
-        get_or_create(self.session, Trackers, **tracker)
+        get_or_create(self.test_session, Trackers, **tracker)
         data_in_db = self.cur.execute('SELECT * FROM TRACKERS;').fetchall()[0]
         expected_results = (123456, '123456', 'working', '2017-01-01 00:00:00.000000',
                             '2015-01-02 00:00:00.000000', '2019-01-02 00:00:00.000000', 'lost_dot', None, None)
@@ -179,7 +206,7 @@ class TestManipulatingData(TestCase):
             'category': 'nonsense'
         }
         with self.assertRaises(IntegrityError):
-            create(self.session, Riders, **data_to_add)
+            create(self.test_session, Riders, **data_to_add)
 
     def test_get_and_delete(self):
         physical_location = {
@@ -201,11 +228,11 @@ class TestManipulatingData(TestCase):
         self.cur.execute('INSERT INTO physical_locations VALUES (?, ?)', tuple(physical_location.values()))
         self.cur.execute('INSERT INTO trackers VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)', tuple(tracker.values()))
         self.conn.commit()
-        get_and_delete(self.session, Trackers, **{'tkr_number': 123456})
+        get_and_delete(self.test_session, Trackers, **{'tkr_number': 123456})
         self.assertEqual(self.cur.execute('SELECT * FROM trackers').fetchall(), [])
 
     def test_get_and_delete_doesnt_exist(self):
-        self.assertFalse(get_and_delete(self.session, Trackers, **{'tkr_number': 123534}))
+        self.assertFalse(get_and_delete(self.test_session, Trackers, **{'tkr_number': 123534}))
 
     def test_get_and_delete_multi_data(self):
         physical_location = {
@@ -250,10 +277,10 @@ class TestManipulatingData(TestCase):
         self.cur.execute('INSERT INTO trackers VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)', tuple(tracker_2.values()))
         self.cur.execute('INSERT INTO trackers VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)', tuple(tracker_3.values()))
         self.conn.commit()
-        get_and_delete(self.session, Trackers, commit=False, **{'tkr_number': 123456})
-        get_and_delete(self.session, Trackers, commit=False, **{'tkr_number': 123457})
-        get_and_delete(self.session, Trackers, commit=False, **{'tkr_number': 123458})
-        self.session.commit()
+        get_and_delete(self.test_session, Trackers, commit=False, **{'tkr_number': 123456})
+        get_and_delete(self.test_session, Trackers, commit=False, **{'tkr_number': 123457})
+        get_and_delete(self.test_session, Trackers, commit=False, **{'tkr_number': 123458})
+        self.test_session.commit()
         self.assertEqual(self.cur.execute('SELECT * FROM trackers').fetchall(), [])
 
     def test_sqla_sanitises_data_on_input(self):
@@ -262,10 +289,10 @@ class TestManipulatingData(TestCase):
             'id': 1,
             'first_name': 'DROP TABLE  trackers'
         }
-        get_or_create(self.session, Riders, **test_data)
+        get_or_create(self.test_session, Riders, **test_data)
         current_tables = self.cur.execute('SELECT NAME FROM sqlite_master WHERE TYPE = "table";').fetchall()
         self.assertTrue(self.tables == current_tables)
-        self.assertEqual(get_or_create(self.session, Riders, **{'id': 1})[0][0].id, 1)
+        self.assertEqual(get_or_create(self.test_session, Riders, **{'id': 1})[0][0].id, 1)
 
     def test_update(self):
         pass
