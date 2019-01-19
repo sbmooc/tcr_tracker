@@ -1,65 +1,64 @@
-import sys
+"""A set of helper functions to interact with the DB, using SQLA ORM"""
+# todo tidy up and add typehinting
 
-from sqlalchemy.orm import sessionmaker
-# TODO These appear as unused imports but they're not
-from models import Trackers, TrackerLocations, PhysicalLocations, PersonalLocations, Riders
-from sqlalchemy import create_engine, Table
-from sqlalchemy.engine.url import URL
+from contextlib import contextmanager
 
-# Base.metadata.create_all(engine)
-# Session = sessionmaker(bind=engine)
-# session = Session()
-#
-# add_rider = Riders(first_name='oli', last_name='coombs',
-#                    cap_number='234', category='solo')
-#
-# session.add(add_rider)
-# session.commit()
+from sqlalchemy import create_engine
+from sqlalchemy.orm import Session
+import os
 
 
+def set_up_engine():
+    db_type = os.environ.get('DB_TYPE')
+    db_uri = os.environ.get('DB_URI')
+    if db_type is not None and db_uri is not None:
+        engine = create_engine(db_type + db_uri)
+    else:
+        engine = None
+    return engine
 
-def build_session(drivername: str, username: str = None, password: str = None,
-                  host: str = None, port: str = None, database: str = None,
-                  query: str = None):
-    db = URL(drivername, username=username, password=password,
-          host=host, port=port, database=database, query=query)
-    engine = create_engine(db)
-    Session = sessionmaker(bind=engine)
-    return Session()
+
+engine = set_up_engine()
 
 
-def commit_to_db(session):
+@contextmanager
+def session_scope():
+    """Provide a transactional scope around a series of operations."""
+    session = Session(bind=engine)
     try:
+        yield session
         session.commit()
-        return True
-    # todo make this less broad
-    except Exception as e:
-        print(e)
-        return False
+    except:
+        session.rollback()
+        raise
+    finally:
+        session.close()
 
 
-def insert_row(session, table_name: str, **kwargs):
-    table = getattr(sys.modules[__name__], table_name)
-    data_to_add = table(**kwargs)
-    session.add(data_to_add)
-    return commit_to_db(session)
+def create(session, model, commit=True, **kwargs):
+    instance = model(**kwargs)
+    session.add(instance)
+    if commit:
+        session.commit()
+    return instance
 
 
-def delete_row(session, table_name: str, row_id: int):
-    table = getattr(sys.modules[__name__], table_name)
-    obj = session.query(Riders).filter(table.id == row_id).all()
-    if obj:
-        session.delete(obj)
-        return commit_to_db(session)
+def get_or_create(session, model, commit=True, **kwargs):
+    instances = session.query(model).filter_by(**kwargs).all()
+    if instances:
+        return instances, False
+    else:
+        instance = create(session, model, commit=commit, **kwargs)
+        return instance, True
+
+
+def get_and_delete(session, model, commit=True, **kwargs):
+    instances = session.query(model).filter_by(**kwargs).all()
+    if instances:
+        for instance in instances:
+            session.delete(instance)
+            if commit:
+                session.commit()
+        return instances, True
     else:
         return False
-
-
-def update_row(session, table_name: str, row_id: int, update_values: dict):
-    table = getattr(sys.modules[__name__], table_name)
-    obj = session.query(table).filter(table.id == row_id).first()
-    for key, value in update_values.items():
-        obj.key = value
-    return commit_to_db(session)
-
-
