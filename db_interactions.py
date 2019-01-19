@@ -7,23 +7,25 @@ from sqlalchemy import create_engine
 from sqlalchemy.orm import Session
 import os
 
+engine = None
+
 
 def set_up_engine():
     db_type = os.environ.get('DB_TYPE')
     db_uri = os.environ.get('DB_URI')
     if db_type is not None and db_uri is not None:
-        engine = create_engine(db_type + db_uri)
+        engine_ = create_engine(db_type + db_uri)
     else:
-        engine = None
-    return engine
-
-
-engine = set_up_engine()
+        engine_ = None
+    return engine_
 
 
 @contextmanager
 def session_scope():
     """Provide a transactional scope around a series of operations."""
+    global engine
+    if not engine:
+        engine = set_up_engine()
     session = Session(bind=engine)
     try:
         yield session
