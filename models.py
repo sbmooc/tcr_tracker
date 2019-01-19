@@ -1,11 +1,10 @@
 from sqlalchemy import Column, Integer, String, DATETIME, \
     ForeignKey, Float, Enum
 from sqlalchemy.ext.declarative import declarative_base
-from sqlalchemy.orm import sessionmaker, relationship, backref
+from sqlalchemy.orm import relationship
 import enum
 
 Base = declarative_base()
-Session = sessionmaker()
 
 
 class StatusChoices(enum.Enum):
@@ -87,7 +86,7 @@ class Riders(TrackerLocations):
     email = Column('email', String)
 
     __mapper_args__ = {
-        'polymorphic_identity': 'riders'
+        'polymorphic_identity': 'Riders'
     }
 
 # TODO split out specifics associated with this race into another table?
