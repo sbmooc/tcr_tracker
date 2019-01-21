@@ -1,5 +1,5 @@
 """A set of helper functions to interact with the DB, using SQLA ORM"""
-# todo tidy up and add typehinting
+# todo add typehinting
 
 from contextlib import contextmanager
 
@@ -7,7 +7,7 @@ from sqlalchemy import create_engine
 from sqlalchemy.orm import Session
 import os
 
-# using a global variable to store engine here :-/ time difference of calculating engine each time?
+# using a global variable to store engine here :-/ should time difference of calculating engine each time?
 # or use a decorator to store the state of engine?
 engine = None
 
@@ -23,20 +23,23 @@ def set_up_engine():
 
 
 @contextmanager
-def session_scope():
+def session_scope(commit=True):
     """Provide a transactional scope around a series of operations."""
     global engine
     if not engine:
         engine = set_up_engine()
     session = Session(bind=engine)
-    try:
+    if commit:
+        try:
+            yield session
+            session.commit()
+        except:
+            session.rollback()
+            raise
+        finally:
+            session.close()
+    else:
         yield session
-        session.commit()
-    except:
-        session.rollback()
-        raise
-    finally:
-        session.close()
 
 
 def create(session, model, commit=True, **kwargs):
@@ -68,9 +71,8 @@ def get_and_delete(session, model, commit=True, **kwargs):
         return False
 
 
-def update(session, model, filter_, commit=True, **kwargs):
-    instance = model(**kwargs)
-    session.query(model).filter_by(**filter_).update(instance)
+def update(session, model, update, commit=True, **kwargs):
+    session.query(model).filter_by(**kwargs).update(update)
     if commit:
         session.commit()
 
