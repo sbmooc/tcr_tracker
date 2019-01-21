@@ -11,7 +11,7 @@ from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import sessionmaker
 
 from models import Base, Riders, PhysicalLocations, Trackers
-from db_interactions import create, get_or_create, get_and_delete, set_up_engine, session_scope
+from db_interactions import create, get_or_create, get_and_delete, set_up_engine, session_scope, update
 from unittest.mock import patch, Mock
 
 
@@ -295,5 +295,31 @@ class TestManipulatingData(DBTests):
         self.assertEqual(get_or_create(self.test_session, Riders, **{'id': 1})[0][0].id, 1)
 
     def test_update(self):
-        pass
+        physical_location = {
+            'id': 1,
+            'name': 'cp1'
+        }
+        tracker = {
+            'tkr_number': 123456,
+            'esn_number': '123456',
+            'current_status': 'working',
+            'last_test_date': datetime(2017, 1, 1),
+            'purchase': datetime(2015, 1, 2),
+            'warranty_expiry': datetime(2019, 1, 2),
+            'owner': 'lost_dot',
+            'third_party_name': None,
+            'location_id': 1,
+        }
+        self.cur.execute('INSERT INTO physical_locations VALUES (?, ?)', tuple(physical_location.values()))
+        self.cur.execute('INSERT INTO trackers VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)', tuple(tracker.values()))
+        self.conn.commit()
+        filter_ = {'tkr_number': 123456}
+        updates = {'owner': 'third_party',
+                   'third_party_name': 'TAW'}
+        update(self.test_session, Trackers, filter_, **updates)
+        result = self.cur.execute('SELECT * FROM trackers').fetchall()
+        self.assertEqual(result[0], (123456, '123456', 'working',  '2017-01-01 00:00:00',
+                                     '2015-01-02 00:00:00', '2019-01-02 00:00:00',
+                                     'third_party', 'TAW', 1))
+
 
