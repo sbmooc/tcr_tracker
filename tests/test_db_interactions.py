@@ -10,7 +10,7 @@ from sqlalchemy import create_engine
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import sessionmaker
 
-from models import Base, Riders, PhysicalLocations, Trackers
+from models import Base, Riders, PhysicalLocations, Trackers, TrackerLocations
 from db_interactions import create, get_or_create, get_and_delete, set_up_engine, session_scope, update
 from unittest.mock import patch, Mock
 
@@ -24,7 +24,7 @@ class DBTests(TestCase):
         engine = create_engine('sqlite:///' + cls.temp_db, echo=True)
         Base.metadata.create_all(engine)
         cls.TestSession = sessionmaker(bind=engine)
-        cls.env_1 = patch.dict('os.environ', {'DB_TYPE': 'sqlite:///', 'DB_URI': cls.temp_db})
+        cls.os_env = patch.dict('os.environ', {'DB_TYPE': 'sqlite:///', 'DB_URI': cls.temp_db})
         cls.test_engine = create_engine('sqlite:///' + cls.temp_db)
 
     @classmethod
@@ -34,6 +34,10 @@ class DBTests(TestCase):
     def setUp(self):
         self.conn = sqlite3.connect(self.temp_db)
         self.cur = self.conn.cursor()
+        # todo ensure that this is turned on for sqlite3, remove once update db?
+        #   https://stackoverflow.com/questions/37034264/sqlite3-on-delete-restrict-via-sqlalchemy-not-being-honored-but-works-fine-in
+        # self.cur.execute('PRAGMA foreign_keys=ON')
+        # self.conn.commit()
         self.tables = self.cur.execute('SELECT NAME FROM sqlite_master WHERE TYPE = "table";').fetchall()
         self.test_session = self.TestSession()
 
@@ -48,7 +52,7 @@ class DBTests(TestCase):
 class TestSetUpDB(DBTests):
 
     def test_set_up_engine(self):
-        with self.env_1:
+        with self.os_env:
             engine = set_up_engine()
         self.assertEqual(engine.url, self.test_engine.url)
 
@@ -77,7 +81,6 @@ class TestSetUpDB(DBTests):
                 s.add(rider_1)
         #assert session was rolled back
         sqlalchemy.orm.Session.rollback.assert_called()
-
 
 
 class TestManipulatingData(DBTests):
@@ -198,8 +201,6 @@ class TestManipulatingData(DBTests):
                             '2015-01-02 00:00:00.000000', '2019-01-02 00:00:00.000000', 'lost_dot', None, None)
         self.assertEqual(data_in_db, expected_results)
 
-    # todo more tests re data is added to TrackerLocations when new rider, physical location or personal location added
-
     def test_create_wrong_category(self):
         data_to_add = {
             'id': 1,
@@ -228,6 +229,7 @@ class TestManipulatingData(DBTests):
         self.cur.execute('INSERT INTO physical_locations VALUES (?, ?)', tuple(physical_location.values()))
         self.cur.execute('INSERT INTO trackers VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)', tuple(tracker.values()))
         self.conn.commit()
+
         get_and_delete(self.test_session, Trackers, **{'tkr_number': 123456})
         self.assertEqual(self.cur.execute('SELECT * FROM trackers').fetchall(), [])
 
@@ -283,16 +285,42 @@ class TestManipulatingData(DBTests):
         self.test_session.commit()
         self.assertEqual(self.cur.execute('SELECT * FROM trackers').fetchall(), [])
 
+    def test_get_and_delete_ensure_ondelete_restrictions_maintained(self):
+
+        #todo - sort this test out when not using sqlite
+
+        self.cur.execute('INSERT INTO tracker_locations VALUES (?, ?)',
+                         (1, 'Riders'))
+        self.cur.execute('INSERT INTO RIDERS VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)',
+                         (1, 'bob', 'hill', '123', 'solo', 'scratched', 'male', None, None, None))
+        tracker = {
+            'tkr_number': 123458,
+            'esn_number': '123456',
+            'current_status': 'working',
+            'last_test_date': datetime(2017, 1, 1),
+            'purchase': datetime(2015, 1, 2),
+            'warranty_expiry': datetime(2019, 1, 2),
+            'owner': 'lost_dot',
+            'third_party_name': None,
+            'location_id': 1,
+        }
+        self.cur.execute('INSERT INTO trackers VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)',
+                         tuple(tracker.values()))
+        self.conn.commit()
+        # attempt to delete tracker location, even when there is a tracker associated with it
+        # with self.assertRaises(IntegrityError):
+        get_and_delete(self.test_session, TrackerLocations, **{'id': 1})
+
     def test_sqla_sanitises_data_on_input(self):
         # attempt to drop trackers table
         test_data = {
             'id': 1,
-            'first_name': 'DROP TABLE  trackers'
+            'first_name': 'DROP TABLE trackers'
         }
         get_or_create(self.test_session, Riders, **test_data)
         current_tables = self.cur.execute('SELECT NAME FROM sqlite_master WHERE TYPE = "table";').fetchall()
         self.assertTrue(self.tables == current_tables)
-        self.assertEqual(get_or_create(self.test_session, Riders, **{'id': 1})[0][0].id, 1)
+        self.assertEqual(get_or_create(self.test_session, Riders, **{'id': 1})[0][0].first_name, 'DROP TABLE trackers')
 
     def test_update(self):
         physical_location = {
@@ -316,10 +344,45 @@ class TestManipulatingData(DBTests):
         filter_ = {'tkr_number': 123456}
         updates = {'owner': 'third_party',
                    'third_party_name': 'TAW'}
-        update(self.test_session, Trackers, filter_, **updates)
+        update(self.test_session, Trackers, updates, **filter_)
         result = self.cur.execute('SELECT * FROM trackers').fetchall()
         self.assertEqual(result[0], (123456, '123456', 'working',  '2017-01-01 00:00:00',
                                      '2015-01-02 00:00:00', '2019-01-02 00:00:00',
                                      'third_party', 'TAW', 1))
+
+
+class ManiuplateDataUsingSetUp(DBTests):
+
+# todo something weird going on with this, won't run following other tests :-/
+
+    def setUp(self):
+        super(ManiuplateDataUsingSetUp, self).setUp()
+        os.environ['DB_TYPE'] = 'sqlite:///'
+        os.environ['DB_URI'] = self.temp_db
+
+    def tearDown(self):
+        super(ManiuplateDataUsingSetUp, self).tearDown()
+        del os.environ['DB_TYPE']
+        del os.environ['DB_URI']
+
+    def test_insert_multiple_rows_one_commit(self):
+        riders = [{'id': 1}, {'id': 2}, {'id': 3}]
+        with session_scope(commit=False) as session:
+            for rider in riders:
+                get_or_create(session,  Riders, commit=False, **rider)
+            session.commit()
+        result = self.cur.execute('SELECT * FROM RIDERS').fetchall()
+        self.assertTrue(tuple(r[0] for r in result) == y['id'] for y in riders)
+
+    def test_insert_multiple_rows_multiple_commits(self):
+        riders = [{'id': 1}, {'id': 2}, {'id': 3}]
+        with session_scope() as session:
+            for rider in riders:
+                get_or_create(session,  Riders, commit=False, **rider)
+        result = self.cur.execute('SELECT * FROM RIDERS').fetchall()
+        self.assertTrue(tuple(r[0] for r in result) == y['id'] for y in riders)
+
+
+
 
 
