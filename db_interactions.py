@@ -7,6 +7,8 @@ from sqlalchemy import create_engine
 from sqlalchemy.orm import Session
 import os
 
+# using a global variable to store engine here :-/ time difference of calculating engine each time?
+# or use a decorator to store the state of engine?
 engine = None
 
 
@@ -64,3 +66,11 @@ def get_and_delete(session, model, commit=True, **kwargs):
         return instances, True
     else:
         return False
+
+
+def update(session, model, filter_, commit=True, **kwargs):
+    instance = model(**kwargs)
+    session.query(model).filter_by(**filter_).update(instance)
+    if commit:
+        session.commit()
+
