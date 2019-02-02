@@ -1,5 +1,5 @@
 from sqlalchemy import Column, Integer, String, DATETIME, \
-    ForeignKey, Float, Enum
+    ForeignKey, Float, Enum, Table
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import relationship
 import enum
@@ -7,10 +7,16 @@ import enum
 Base = declarative_base()
 
 
-class StatusChoices(enum.Enum):
+class WorkingStatus(enum.Enum):
     working = 1
     broken = 2
     unknown = 3
+
+
+class LoanStatus(enum.Enum):
+    with_rider = 1
+    not_loaned = 2
+    other = 3
 
 
 class OwnerChoices(enum.Enum):
@@ -49,8 +55,10 @@ class Trackers(Base):
     __tablename__ = 'trackers'
     tkr_number = Column('tkr_number', Integer, primary_key=True)
     esn_number = Column('esn_number', String)
-    current_status = Column('current_status',
-                            Enum(StatusChoices))
+    working_status = Column('current_status',
+                            Enum(WorkingStatus))
+    loan_status = Column('loan_status', Enum(LoanStatus))
+    deposit_amount = Column('deposit_amount', Float)
     last_test_date = Column('last_test', DATETIME)
     purchase = Column('purchase', DATETIME)
     warranty_expiry = Column('warranty', DATETIME)
@@ -77,20 +85,34 @@ class Riders(TrackerLocations):
                 autoincrement=True)
     first_name = Column('first_name', String)
     last_name = Column('last_name', String)
-    cap_number = Column('cap_number', String)
-    category = Column('category', Enum(RiderCategories))
-    status = Column('status', Enum(RiderStatus))
     gender = Column('gender', Enum(RiderGenders))
-    deposit_status = Column('deposit_status', Enum(DepositStatus))
-    deposit_amount = Column('deposit_amount', Float)
     email = Column('email', String)
+    rider_races = relationship('RiderRaces', backref='rider')
 
     __mapper_args__ = {
         'polymorphic_identity': 'Riders'
     }
 
-# TODO split out specifics associated with this race into another table?
-# something like -- raceid, rider_id, status, category, deposit_status, deposit_amount
+
+class Races(Base):
+    __tablename__ = 'races'
+    id = Column(Integer, primary_key=True, autoincrement=True)
+    date_start = Column('date_start', DATETIME)
+    date_end = Column('date_end', DATETIME)
+    name = Column('name', String)
+    code = Column('code', String)
+    rider_races = relationship('RiderRaces', backref='race')
+
+
+class RiderRaces(Base):
+    __tablename__ = 'rider_races'
+    id = Column(Integer, primary_key=True, autoincrement=True)
+    race_id = Column(Integer, ForeignKey('races.id'))
+    rider_id = Column(Integer, ForeignKey('riders.id'))
+    deposit_status = Column('deposit_status', Enum(DepositStatus))
+    category = Column('category', Enum(RiderCategories))
+    status = Column('status', Enum(RiderStatus))
+    cap_number = Column('cap_number', String)
 
 
 class PhysicalLocations(TrackerLocations):

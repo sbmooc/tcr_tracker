@@ -7,10 +7,6 @@ from sqlalchemy import create_engine
 from sqlalchemy.orm import Session
 import os
 
-# using a global variable to store engine here :-/ should time difference of calculating engine each time?
-# or use a decorator to store the state of engine?
-engine = None
-
 
 def set_up_engine():
     db_type = os.environ.get('DB_TYPE')
@@ -25,9 +21,7 @@ def set_up_engine():
 @contextmanager
 def session_scope(commit=True):
     """Provide a transactional scope around a series of operations."""
-    global engine
-    if not engine:
-        engine = set_up_engine()
+    engine = set_up_engine()
     session = Session(bind=engine)
     if commit:
         try:
