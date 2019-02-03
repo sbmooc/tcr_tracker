@@ -1,5 +1,7 @@
 import os
 import shutil
+
+import pytest
 import sqlalchemy
 import sqlite3
 from datetime import datetime
@@ -21,7 +23,7 @@ class DBTests(TestCase):
     def setUpClass(cls):
         cls.temp_ = mkdtemp()
         cls.temp_db = os.path.join(cls.temp_, 'test_db.db')
-        engine = create_engine('sqlite:///' + cls.temp_db, echo=True)
+        engine = create_engine('sqlite:///' + cls.temp_db)
         Base.metadata.create_all(engine)
         cls.TestSession = sessionmaker(bind=engine)
         cls.os_env = patch.dict('os.environ', {'DB_TYPE': 'sqlite:///', 'DB_URI': cls.temp_db})
@@ -280,6 +282,7 @@ class TestCRUD(DBTests):
         self.test_session.commit()
         self.assertEqual(self.cur.execute('SELECT * FROM trackers').fetchall(), [])
 
+    @pytest.mark.skip
     def test_get_and_delete_ensure_ondelete_restrictions_maintained(self):
 
         #todo - sort this test out when not using sqlite
@@ -349,6 +352,59 @@ class TestCRUD(DBTests):
                                      '2015-01-02 00:00:00', '2019-01-02 00:00:00',
                                      'third_party', 'TAW', 1))
 
+    def test_no_update_on_no_data(self):
+        # nothing in db
+        filter_ = {'tkr_number': 123456}
+        updates = {'owner': 'third_party',
+                   'third_party_name': 'TAW'}
+        self.assertFalse(update(self.test_session, Trackers, updates, **filter_))
+
+    def test_multiple_update(self):
+        physical_location = {
+            'id': 1,
+            'name': 'cp1'
+        }
+        tracker_1 = {
+            'tkr_number': 123456,
+            'esn_number': '123456',
+            'working_status': 'working',
+            'loan_status': 'not_loaned',
+            'deposit_amount': 100,
+            'last_test_date': datetime(2017, 1, 1),
+            'purchase': datetime(2015, 1, 2),
+            'warranty_expiry': datetime(2019, 1, 2),
+            'owner': 'lost_dot',
+            'third_party_name': None,
+            'location_id': 1,
+        }
+        tracker_2 = {
+            'tkr_number': 123457,
+            'esn_number': '123457',
+            'working_status': 'working',
+            'loan_status': 'not_loaned',
+            'deposit_amount': 100,
+            'last_test_date': datetime(2017, 1, 1),
+            'purchase': datetime(2015, 1, 2),
+            'warranty_expiry': datetime(2019, 1, 2),
+            'owner': 'lost_dot',
+            'third_party_name': None,
+            'location_id': 1,
+        }
+        self.cur.execute('INSERT INTO physical_locations VALUES (?, ?)', tuple(physical_location.values()))
+        self.cur.execute('INSERT INTO trackers VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)', tuple(tracker_1.values()))
+        self.cur.execute('INSERT INTO trackers VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)', tuple(tracker_2.values()))
+        self.conn.commit()
+        filter_ = {'loan_status': 'not_loaned'}
+        updates = {'loan_status': 'with_rider'}
+        update(self.test_session, Trackers, updates, **filter_)
+        result = self.cur.execute('SELECT * FROM trackers').fetchall()
+        print(result)
+        self.assertEqual(result[0], (123456, '123456', 'working',  'with_rider', 100, '2017-01-01 00:00:00',
+                                     '2015-01-02 00:00:00', '2019-01-02 00:00:00',
+                                     'lost_dot', None, 1))
+        self.assertEqual(result[1], (123457, '123457', 'working',  'with_rider', 100, '2017-01-01 00:00:00',
+                                     '2015-01-02 00:00:00', '2019-01-02 00:00:00',
+                                     'lost_dot', None, 1))
 
 class TestCRUDUsingContextMgr(DBTests):
 

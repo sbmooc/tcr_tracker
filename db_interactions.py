@@ -7,6 +7,8 @@ from sqlalchemy import create_engine
 from sqlalchemy.orm import Session
 import os
 
+from models import Audit
+
 
 def set_up_engine():
     db_type = os.environ.get('DB_TYPE')
@@ -44,6 +46,14 @@ def create(session, model, commit=True, **kwargs):
     return instance
 
 
+def get(session, model, **kwargs):
+    instances = session.query(model).filter_by(**kwargs).all()
+    if instances:
+        return instances
+    else:
+        return False
+
+
 def get_or_create(session, model, commit=True, **kwargs):
     instances = session.query(model).filter_by(**kwargs).all()
     if instances:
@@ -65,8 +75,23 @@ def get_and_delete(session, model, commit=True, **kwargs):
         return False
 
 
-def update(session, model, update, commit=True, **kwargs):
-    session.query(model).filter_by(**kwargs).update(update)
-    if commit:
-        session.commit()
+# def audit(func):
+#     def wrapper(*args, **kwargs):
+#         instance = get(args[0], args[1], **kwargs)
+#         if instance:
+#             func(*args, **kwargs)
+#         return func(*args, **kwargs)
+#     return wrapper
+#
+#
+# @audit
+def update(session, model, update_, commit=True, **kwargs):
+    instance = get(session, model, **kwargs)
+    if instance:
+        session.query(model).filter_by(**kwargs).update(update_)
+        if commit:
+            session.commit()
+    else:
+        return False
+
 

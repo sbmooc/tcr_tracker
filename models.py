@@ -1,5 +1,5 @@
 from sqlalchemy import Column, Integer, String, DATETIME, \
-    ForeignKey, Float, Enum, Table
+    ForeignKey, Float, Enum, Table, BLOB
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import relationship
 import enum
@@ -137,3 +137,14 @@ class PersonalLocations(TrackerLocations):
     __mapper_args__ = {
         'polymorphic_identity': 'personal_locations'
     }
+
+
+class Audit(Base):
+
+    __tablename__ = 'audit_table'
+    id = Column(Integer, primary_key=True, autoincrement=True)
+    table = Column('table_name', String)
+    table_id = Column('table_id', Integer)
+    table_col = Column('table_column', String)
+    from_value = Column('from_value', BLOB)
+    to_value = Column('to_value', BLOB)
