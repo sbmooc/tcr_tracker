@@ -7,8 +7,6 @@ from sqlalchemy import create_engine
 from sqlalchemy.orm import Session
 import os
 
-from models import Audit
-
 
 def set_up_engine():
     db_type = os.environ.get('DB_TYPE')
@@ -93,5 +91,3 @@ def update(session, model, update_, commit=True, **kwargs):
             session.commit()
     else:
         return False
-
-

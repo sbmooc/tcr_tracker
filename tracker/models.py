@@ -1,5 +1,5 @@
 from sqlalchemy import Column, Integer, String, DATETIME, \
-    ForeignKey, Float, Enum, Table, BLOB
+    ForeignKey, Float, Enum, BLOB
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import relationship
 import enum

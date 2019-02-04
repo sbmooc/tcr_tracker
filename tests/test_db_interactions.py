@@ -12,8 +12,8 @@ from sqlalchemy import create_engine
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import sessionmaker
 
-from models import Base, Riders, PhysicalLocations, Trackers, TrackerLocations, RiderRaces
-from db_interactions import create, get_or_create, get_and_delete, set_up_engine, session_scope, update
+from tracker.models import Base, Riders, PhysicalLocations, Trackers, TrackerLocations, RiderRaces
+from tracker.db_interactions import create, get_or_create, get_and_delete, set_up_engine, session_scope, update
 from unittest.mock import patch, Mock
 
 
@@ -61,7 +61,7 @@ class TestSetUpDB(DBTests):
     def test_engine_None_with_no_env_vars(self):
         self.assertIsNone(set_up_engine())
 
-    @mock.patch('db_interactions.set_up_engine')
+    @mock.patch('tracker.db_interactions.set_up_engine')
     def test_session_scope(self, mock_engine):
         mock_engine.return_value = self.test_engine
         with session_scope() as session:
@@ -70,7 +70,7 @@ class TestSetUpDB(DBTests):
         result = self.cur.execute('SELECT * FROM RIDERS;').fetchall()[0][0]
         self.assertEqual(result, 1)
 
-    @mock.patch('db_interactions.set_up_engine')
+    @mock.patch('tracker.db_interactions.set_up_engine')
     def test_session_scope_with_error(self, mock_engine):
         sqlalchemy.orm.Session.rollback = Mock()
         mock_engine.return_value = self.test_engine
