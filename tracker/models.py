@@ -1,5 +1,5 @@
 from sqlalchemy import Column, Integer, String, DATETIME, \
-    ForeignKey, Float, Enum, BLOB
+    ForeignKey, Float, Enum, BLOB, Boolean
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import relationship
 import enum
@@ -53,7 +53,7 @@ class RiderGenders(enum.Enum):
 class Trackers(Base):
 
     __tablename__ = 'trackers'
-    tkr_number = Column('tkr_number', Integer, primary_key=True)
+    id = Column('id', Integer, primary_key=True)
     esn_number = Column('esn_number', String)
     working_status = Column('current_status',
                             Enum(WorkingStatus))
@@ -68,7 +68,18 @@ class Trackers(Base):
                                                    ondelete='restrict', onupdate='restrict'))
 
 
+class TrackerRiders(Base):
+
+    __tablename__ = 'tracker_riders'
+    id = Column('id', Integer, primary_key=True)
+    tracker = Column('tracker_id', ForeignKey('trackers.id'))
+    rider = Column('rider_id', ForeignKey('riders_races.id'))
+    deposit_amount = Column('deposit_amount', Float)
+    deposit_status = Column('deposit_status', Enum(DepositStatus))
+
+
 class TrackerLocations(Base):
+
     __tablename__ = 'tracker_locations'
     id = Column('id', Integer, primary_key=True)
     types = Column(String)
@@ -95,6 +106,7 @@ class Riders(TrackerLocations):
 
 
 class Races(Base):
+
     __tablename__ = 'races'
     id = Column(Integer, primary_key=True, autoincrement=True)
     date_start = Column('date_start', DATETIME)
@@ -105,14 +117,15 @@ class Races(Base):
 
 
 class RiderRaces(Base):
+
     __tablename__ = 'rider_races'
     id = Column(Integer, primary_key=True, autoincrement=True)
     race_id = Column(Integer, ForeignKey('races.id'))
     rider_id = Column(Integer, ForeignKey('riders.id'))
-    deposit_status = Column('deposit_status', Enum(DepositStatus))
     category = Column('category', Enum(RiderCategories))
     status = Column('status', Enum(RiderStatus))
     cap_number = Column('cap_number', String)
+    trackers = relationship('tracker_riders', back_populates='riders')
 
 
 class PhysicalLocations(TrackerLocations):
@@ -144,7 +157,6 @@ class Audit(Base):
     __tablename__ = 'audit_table'
     id = Column(Integer, primary_key=True, autoincrement=True)
     table = Column('table_name', String)
-    table_id = Column('table_id', Integer)
-    table_col = Column('table_column', String)
-    from_value = Column('from_value', BLOB)
-    to_value = Column('to_value', BLOB)
+    value = Column('value', BLOB)
+    delete_ = Column('delete', Boolean)
+    # user
