@@ -151,7 +151,7 @@ class TestCRUD(DBTests):
         }
 
         tracker = {
-            'tkr_number': 123456,
+            'id': 123456,
             'esn_number': '123456',
             'working_status': 'working',
             'loan_status': 'not_loaned',
@@ -174,7 +174,7 @@ class TestCRUD(DBTests):
     def test_get_or_create_tracker_no_location(self):
 
         tracker = {
-            'tkr_number': 123456,
+            'id': 123456,
             'esn_number': '123456',
             'working_status': 'working',
             'loan_status': 'with_rider',
@@ -204,10 +204,10 @@ class TestCRUD(DBTests):
             'name': 'cp1'
         }
         tracker = {
-            'tkr_number': 123456,
+            'id': 123456,
             'esn_number': '123456',
             'working_status': 'working',
-            'loan_satus': 'not_loaned',
+            'loan_status': 'not_loaned',
             'deposit_amount': 100.0,
             'last_test_date': datetime(2017, 1, 1),
             'purchase': datetime(2015, 1, 2),
@@ -221,11 +221,11 @@ class TestCRUD(DBTests):
         self.cur.execute('INSERT INTO trackers VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)', tuple(tracker.values()))
         self.conn.commit()
 
-        get_and_delete(self.test_session, Trackers, **{'tkr_number': 123456})
+        get_and_delete(self.test_session, Trackers, **{'id': 123456})
         self.assertEqual(self.cur.execute('SELECT * FROM trackers').fetchall(), [])
 
     def test_get_and_delete_doesnt_exist(self):
-        self.assertFalse(get_and_delete(self.test_session, Trackers, **{'tkr_number': 123534}))
+        self.assertFalse(get_and_delete(self.test_session, Trackers, **{'id': 123534}))
 
     def test_get_and_delete_multi_data(self):
         physical_location = {
@@ -233,7 +233,7 @@ class TestCRUD(DBTests):
             'name': 'cp1'
         }
         tracker_1 = {
-            'tkr_number': 123456,
+            'id': 123456,
             'esn_number': '123456',
             'working_status': 'working',
             'loan_status': 'not_loaned',
@@ -246,7 +246,7 @@ class TestCRUD(DBTests):
             'location_id': 1,
         }
         tracker_2 = {
-            'tkr_number': 123457,
+            'id': 123457,
             'esn_number': '123456',
             'working_status': 'working',
             'loan_status': 'not_loaned',
@@ -259,7 +259,7 @@ class TestCRUD(DBTests):
             'location_id': 1,
         }
         tracker_3 = {
-            'tkr_number': 123458,
+            'id': 123458,
             'esn_number': '123456',
             'working_status': 'working',
             'loan_status': 'not_loaned',
@@ -276,9 +276,9 @@ class TestCRUD(DBTests):
         self.cur.execute('INSERT INTO trackers VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)', tuple(tracker_2.values()))
         self.cur.execute('INSERT INTO trackers VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)', tuple(tracker_3.values()))
         self.conn.commit()
-        get_and_delete(self.test_session, Trackers, commit=False, **{'tkr_number': 123456})
-        get_and_delete(self.test_session, Trackers, commit=False, **{'tkr_number': 123457})
-        get_and_delete(self.test_session, Trackers, commit=False, **{'tkr_number': 123458})
+        get_and_delete(self.test_session, Trackers, commit=False, **{'id': 123456})
+        get_and_delete(self.test_session, Trackers, commit=False, **{'id': 123457})
+        get_and_delete(self.test_session, Trackers, commit=False, **{'id': 123458})
         self.test_session.commit()
         self.assertEqual(self.cur.execute('SELECT * FROM trackers').fetchall(), [])
 
@@ -292,7 +292,7 @@ class TestCRUD(DBTests):
         self.cur.execute('INSERT INTO RIDERS VALUES (?, ?, ?, ?, ?)',
                          (1, 'bob', 'hill', 'male', None))
         tracker = {
-            'tkr_number': 123458,
+            'id': 123458,
             'esn_number': '123456',
             'working_status': 'working',
             'loan_status': 'with_rider',
@@ -328,7 +328,7 @@ class TestCRUD(DBTests):
             'name': 'cp1'
         }
         tracker = {
-            'tkr_number': 123456,
+            'id': 123456,
             'esn_number': '123456',
             'working_status': 'working',
             'loan_status': 'not_loaned',
@@ -343,7 +343,7 @@ class TestCRUD(DBTests):
         self.cur.execute('INSERT INTO physical_locations VALUES (?, ?)', tuple(physical_location.values()))
         self.cur.execute('INSERT INTO trackers VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)', tuple(tracker.values()))
         self.conn.commit()
-        filter_ = {'tkr_number': 123456}
+        filter_ = {'id': 123456}
         updates = {'owner': 'third_party',
                    'third_party_name': 'TAW'}
         update(self.test_session, Trackers, updates, **filter_)
@@ -354,7 +354,7 @@ class TestCRUD(DBTests):
 
     def test_no_update_on_no_data(self):
         # nothing in db
-        filter_ = {'tkr_number': 123456}
+        filter_ = {'id': 123456}
         updates = {'owner': 'third_party',
                    'third_party_name': 'TAW'}
         self.assertFalse(update(self.test_session, Trackers, updates, **filter_))
@@ -365,7 +365,7 @@ class TestCRUD(DBTests):
             'name': 'cp1'
         }
         tracker_1 = {
-            'tkr_number': 123456,
+            'id': 123456,
             'esn_number': '123456',
             'working_status': 'working',
             'loan_status': 'not_loaned',
@@ -378,7 +378,7 @@ class TestCRUD(DBTests):
             'location_id': 1,
         }
         tracker_2 = {
-            'tkr_number': 123457,
+            'id': 123457,
             'esn_number': '123457',
             'working_status': 'working',
             'loan_status': 'not_loaned',
@@ -398,7 +398,6 @@ class TestCRUD(DBTests):
         updates = {'loan_status': 'with_rider'}
         update(self.test_session, Trackers, updates, **filter_)
         result = self.cur.execute('SELECT * FROM trackers').fetchall()
-        print(result)
         self.assertEqual(result[0], (123456, '123456', 'working',  'with_rider', 100, '2017-01-01 00:00:00',
                                      '2015-01-02 00:00:00', '2019-01-02 00:00:00',
                                      'lost_dot', None, 1))

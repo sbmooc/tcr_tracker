@@ -7,6 +7,8 @@ from sqlalchemy import create_engine
 from sqlalchemy.orm import Session
 import os
 
+from tracker.models import Audit
+
 
 def set_up_engine():
     db_type = os.environ.get('DB_TYPE')
@@ -73,15 +75,17 @@ def get_and_delete(session, model, commit=True, **kwargs):
         return False
 
 
-# def audit(func):
-#     def wrapper(*args, **kwargs):
-#         instance = get(args[0], args[1], **kwargs)
-#         if instance:
-#             func(*args, **kwargs)
-#         return func(*args, **kwargs)
-#     return wrapper
-#
-#
+def audit(func):
+    def wrapper(*args, **kwargs):
+        data = args[1].as_dict()
+        name = args[1].__tablename__
+        audit_ = Audit(table=name,
+                       data=data)
+        args[0].add(audit_)
+        return func(*args, **kwargs)
+    return wrapper
+
+
 # @audit
 def update(session, model, update_, commit=True, **kwargs):
     instance = get(session, model, **kwargs)

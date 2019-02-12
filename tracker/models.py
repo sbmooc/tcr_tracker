@@ -1,10 +1,32 @@
+from datetime import datetime
+import json
+
 from sqlalchemy import Column, Integer, String, DATETIME, \
-    ForeignKey, Float, Enum, BLOB, Boolean
+    ForeignKey, Float, Enum, BLOB, Boolean, inspect, JSON
 from sqlalchemy.ext.declarative import declarative_base
-from sqlalchemy.orm import relationship
+from sqlalchemy.ext.declarative.api import DeclarativeMeta
+from sqlalchemy.orm import relationship, class_mapper, ColumnProperty
 import enum
 
+
 Base = declarative_base()
+
+
+class DateTimeEncoder(json.JSONEncoder):
+
+    def default(self, o):
+        if isinstance(o, datetime):
+            return o.timestamp()
+        return json.JSONEncoder.default(self, o)
+
+
+class BaseMixin(object):
+    def as_dict(self):
+        result = {}
+        for prop in class_mapper(self.__class__).iterate_properties:
+            if isinstance(prop, ColumnProperty):
+                result[prop.key] = getattr(self, prop.key)
+        return result
 
 
 class WorkingStatus(enum.Enum):
@@ -50,7 +72,7 @@ class RiderGenders(enum.Enum):
     female = 2
 
 
-class Trackers(Base):
+class Trackers(Base, BaseMixin):
 
     __tablename__ = 'trackers'
     id = Column('id', Integer, primary_key=True)
@@ -68,18 +90,18 @@ class Trackers(Base):
                                                    ondelete='restrict', onupdate='restrict'))
 
 
-class TrackerRiders(Base):
+class TrackerRiders(Base, BaseMixin):
 
     __tablename__ = 'tracker_riders'
     id = Column('id', Integer, primary_key=True)
     tracker = Column('tracker_id', ForeignKey('trackers.id'))
-    rider = Column('rider_id', ForeignKey('riders_races.id'))
+    rider = Column('rider_id', ForeignKey('rider_races.id'))
     deposit_amount = Column('deposit_amount', Float)
     deposit_status = Column('deposit_status', Enum(DepositStatus))
 
 
-class TrackerLocations(Base):
-
+class TrackerLocations(Base, BaseMixin):
+# todo sort this out!!
     __tablename__ = 'tracker_locations'
     id = Column('id', Integer, primary_key=True)
     types = Column(String)
@@ -98,14 +120,14 @@ class Riders(TrackerLocations):
     last_name = Column('last_name', String)
     gender = Column('gender', Enum(RiderGenders))
     email = Column('email', String)
-    rider_races = relationship('RiderRaces', backref='rider')
+    rider_races = relationship('RiderRaces', backref='riders')
 
     __mapper_args__ = {
         'polymorphic_identity': 'Riders'
     }
 
 
-class Races(Base):
+class Races(Base, BaseMixin):
 
     __tablename__ = 'races'
     id = Column(Integer, primary_key=True, autoincrement=True)
@@ -116,7 +138,7 @@ class Races(Base):
     rider_races = relationship('RiderRaces', backref='race')
 
 
-class RiderRaces(Base):
+class RiderRaces(Base, BaseMixin):
 
     __tablename__ = 'rider_races'
     id = Column(Integer, primary_key=True, autoincrement=True)
@@ -125,7 +147,7 @@ class RiderRaces(Base):
     category = Column('category', Enum(RiderCategories))
     status = Column('status', Enum(RiderStatus))
     cap_number = Column('cap_number', String)
-    trackers = relationship('tracker_riders', back_populates='riders')
+    trackers = relationship('TrackerRiders', backref='riders')
 
 
 class PhysicalLocations(TrackerLocations):
@@ -157,6 +179,8 @@ class Audit(Base):
     __tablename__ = 'audit_table'
     id = Column(Integer, primary_key=True, autoincrement=True)
     table = Column('table_name', String)
-    value = Column('value', BLOB)
+    # table_id = Column('table_id', Integer)
+    data = Column('data', JSON)
     delete_ = Column('delete', Boolean)
+    # todo when user table is implemented, ensure it is recorded here
     # user
