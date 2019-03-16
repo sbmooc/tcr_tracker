@@ -1,13 +1,11 @@
-from datetime import datetime
+import enum
 import json
+from datetime import datetime
 
 from sqlalchemy import Column, Integer, String, DATETIME, \
-    ForeignKey, Float, Enum, BLOB, Boolean, inspect, JSON
+    ForeignKey, Float, Enum, Boolean, JSON
 from sqlalchemy.ext.declarative import declarative_base
-from sqlalchemy.ext.declarative.api import DeclarativeMeta
 from sqlalchemy.orm import relationship, class_mapper, ColumnProperty
-import enum
-
 
 Base = declarative_base()
 
@@ -63,13 +61,9 @@ class RiderStatus(enum.Enum):
 
 
 class RiderCategories(enum.Enum):
-    solo = 1
-    pair = 2
-
-
-class RiderGenders(enum.Enum):
     male = 1
     female = 2
+    pair = 2
 
 
 class Trackers(Base, BaseMixin):
@@ -114,11 +108,11 @@ class TrackerLocations(Base, BaseMixin):
 class Riders(TrackerLocations):
 
     __tablename__ = 'riders'
+    # todo - sort this out, dont link to tracker_locations?
     id = Column(Integer, ForeignKey('tracker_locations.id'), primary_key=True,
                 autoincrement=True)
     first_name = Column('first_name', String)
     last_name = Column('last_name', String)
-    gender = Column('gender', Enum(RiderGenders))
     email = Column('email', String)
     rider_races = relationship('RiderRaces', backref='riders')
 
