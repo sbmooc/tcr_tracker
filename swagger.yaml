@@ -30,32 +30,60 @@ paths:
       summary: Add a new rider
       description:
       operationId: addRider
-      consumes:
-      - application/json
-      produces:
-      - application/json
       requestBody:
-        description: Add new rider data
+        description: Add a new rider
+        required: True
         content:
           application/json:
             schema:
               $ref: '#/components/schemas/PostRider'
       responses:
-        # successful response - respond with full rider information
+        200:
+          description: Rider response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PostRiderResponse'
     get:
       tags:
         - riders
-      # get a list of all riders. how to paginate?
+      summary: Get a list of riders
+      operationId: getRiderList
+      parameters:
+        - $ref: '#/components/parameters/Limit'
+        - $ref: '#/components/parameters/Race'
+      responses:
+        200:
+          description: List of riders
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RiderList'
   /riders/{rider_id}:
     get:
       tags:
         - riders
       summary: Retrive information about one rider
+      responses:
+        200:
+          description: Rider response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Rider'
     patch:
       tags:
         - riders
       summary: Change data about a rider
       operationId: patchRider
+      parameters:
+        - $ref: '#/components/parameters/RiderId'
+      requestBody:
+        description: Change information about one rider
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PatchRider'
   /riders/{rider_id}/assignTracker:
     post:
       tags:
@@ -87,6 +115,13 @@ paths:
       200:
         schema:
           $ref: '#/components/schemas/Races'
+  /races/{race_id}/{checkpoint_id}:
+    get:
+      tags:
+        - races
+    description: See a list of riders who have passed through a checkpoint
+    response:
+      200:
   /races/{race_id}/riders:
     get:
       tags:
@@ -108,7 +143,45 @@ paths:
       tags:
         - trackers
 components:
+  parameters:
+    Limit:
+      name: limit
+      in: query
+      description: Limit the number of responses to return
+      required: false
+      default: 25
+      schema:
+        $ref: '#/components/schemas/LimitParam'
+    Race:
+      name: race
+      in: query
+      description: Limit the return of riders to one or more races
+      schema:
+        $ref: '#/components/schemas/RaceParam'
+    RiderId:
+      name: rider_id
+      in: path
+      description: Rider ID
+      required: true
+      schema:
+        $ref: '#/components/schemas/RiderId'
   schemas:
+    LimitParam:
+      type: integer
+      example: 5
+    RaceParam:
+      type: string
+      example: TCR06
+    PatchRider:
+      type:
+        object
+      properties:
+        firstName:
+          $ref: '#/components/schemas/FirstName'
+        lastName:
+          $ref: '#/components/schemas/LastName'
+        email:
+          $ref: '#/components/schemas/Email'
     PostRider:
       type:
         object
@@ -122,6 +195,98 @@ components:
         email:
           $ref: '#/components/schemas/Email'
           required: true
+    PostRiderResponse:
+      type:
+        object
+      properties:
+        firstName:
+          $ref: '#/components/schemas/FirstName'
+        lastName:
+          $ref: '#/components/schemas/LastName'
+        email:
+          $ref: '#/components/schemas/Email'
+        id:
+          $ref: '#/components/schemas/Id'
+    RiderList:
+      type: array
+      items:
+        $ref: '#/components/schemas/Rider'
+    Rider:
+      type:
+        object
+      properties:
+        firstName:
+          $ref: '#/components/schemas/FirstName'
+        lastName:
+          $ref: '#/components/schemas/lastName'
+        email:
+          $ref: '#/components/schemas/Email'
+        id:
+          $ref: '#/components/schemas/Id'
+        trackers:
+          $ref: '#/components/schemas/RiderTrackerList'
+        totalDeposit:
+          $ref: '#/components/schemas/DepositAmount'
+        activeRace:
+          $ref: '#/components/schemas/ActiveRace'
+    ActiveRace:
+      type: object
+      properties:
+        raceCode:
+          $ref: '#/components/schemas/RaceCode'
+        checkPoints:
+          $ref: '#/components/schemas/CheckPointList'
+    CheckPointList:
+      type: array
+      items:
+        $ref: '#/components/schemas/CheckPointSeen'
+    CheckPointSeen:
+      type: object
+      properties:
+        checkPoint:
+          $ref: '#/components/schemas/checkPoint'
+        timeSeen:
+          $ref: '#/components/schemas/dateTime'
+    checkPoint:
+      type: string
+      example: CP2
+    dateTime:
+      type: object
+      properties:
+        timestamp:
+          $ref: '#/components/schemas/timestamp'
+        timeReadable:
+          $ref: '#/components/schemas/timeReadable'
+    RiderTrackerList:
+      type: array
+      items:
+        $ref: '#/components/schemas/RiderTracker'
+    RiderTracker:
+      type: object
+      properties:
+        esnNumber:
+          $ref: '#/components/schemas/ESNNumber'
+        id:
+          $ref: '#/components/schemas/Id'
+        depositAmount:
+          $ref: '#/components/schemas/DepositAmount'
+        workingStatus:
+          $ref: '#/components/schemas/WorkingStatus'
+    Id:
+      type: integer
+      example: 142
+    ESNNumber:
+      type: string
+      example: 123456789
+    DepositAmount:
+      type: float
+      example: 200.4
+    WorkingStatus:
+      type: string
+      enum:
+        - working
+        - broken
+        - unknown
     Races:
       type: array
       items:
@@ -133,10 +298,10 @@ components:
       properties:
         dateStart:
           schema:
-            $ref: '#/components/schemas/timeStamp'
+            $ref: '#/components/schemas/dateTime'
         dateEnd:
           schema:
-            $ref: '#/components/schemas/timeStamp'
+            $ref: '#/components/schemas/dateTime'
         name:
           schema:
             $ref: '#/components/schemas/RaceName'
@@ -147,9 +312,13 @@ components:
       type: string
       description: Code for Race
       example: TCR06
-    timeStamp:
+    timestamp:
       type: integer
       description: Unix Epoch timestamp
+    timeReadable:
+      type: string
+      description: ISO Format Date Time string
+      example: '2018-01-03T23:00:15'
     RaceName:
       type: string
       description: Name of Race
@@ -164,4 +333,5 @@ components:
       example: Dodds
     Email:
       type: string
+      example: hello@email.com
 
