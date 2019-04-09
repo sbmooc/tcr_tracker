@@ -31,7 +31,7 @@ paths:
       description:
       operationId: addRider
       requestBody:
-        description: Add a new rider
+        description: Basic rider details to add
         required: True
         content:
           application/json:
@@ -39,7 +39,7 @@ paths:
               $ref: '#/components/schemas/PostRider'
       responses:
         200:
-          description: Rider response
+          description: Basic rider details
           content:
             application/json:
               schema:
@@ -51,14 +51,14 @@ paths:
       operationId: getRiderList
       parameters:
         - $ref: '#/components/parameters/Limit'
-        - $ref: '#/components/parameters/RaceFilter'
+        - $ref: '#/components/parameters/IdStart'
       responses:
         200:
           description: List of riders
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/RiderList'
+                $ref: '#/components/schemas/Riders'
   /riders/{rider_id}:
     get:
       tags:
@@ -88,7 +88,7 @@ paths:
               $ref: '#/components/schemas/PatchRider'
       responses:
         200:
-          description: Rider response
+          description: Updated information about rider
           content:
             application/json:
               schema:
@@ -110,7 +110,7 @@ paths:
               $ref: '#/components/schemas/AssignTracker'
       responses:
         200:
-          description: Rider response
+          description: List of trackers currently assigned to rider
           content:
             application/json:
               schema:
@@ -134,40 +134,16 @@ paths:
               $ref: '#/components/schemas/RemoveTracker'
       responses:
         200:
-          description: Rider response
+          description: List of trackers currently assigned to rider
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/RiderTrackerList'
         # error tracker not assigned to rider
-  /riders/{rider_id}/assignRace:
+  /riders/{rider_id}/{checkpoint_id}/assignArrival:
     post:
       parameters:
         - $ref: '#/components/parameters/RiderId'
-      tags:
-        - riders
-        - trackers
-      summary: Assign a rider to a Race
-      operationId: assignRiderToRace
-      requestBody:
-        required: True
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/RaceCode'
-      responses:
-        200:
-          description: Rider response
-          content:
-            application/json:
-              schema:
-                # todo - what should this respond with?
-        # error race doesnt exist
-  /riders/{rider_id}/{race_id}/{checkpoint_id}/assignArrival:
-    post:
-      parameters:
-        - $ref: '#/components/parameters/RiderId'
-        - $ref: '#/components/parameters/Race'
         - $ref: '#/components/parameters/CheckpointID'
       tags:
         - riders
@@ -182,51 +158,14 @@ paths:
               $ref: '#/components/schemas/CheckpointSeen'
       responses:
         200:
-          description: Rider response
+          description: Successfully assigned rider to checkpoint
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/ActiveRace'
-  /races:
-    get:
-      tags:
-        - races
-      summary: Get information on all races
-      operationId: getRacesList
-      responses:
-        200:
-          description: List of all races
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/RaceList'
-  /races/{race_id}:
+                $ref: '#/components/schemas/CheckpointList'
+  /races/{checkpoint_id}:
     parameters:
-      - $ref: '#/components/parameters/Race'
-    get:
-      tags:
-        - races
-    description: Retrive information about a race
-    operationId: getRace
-    response:
-      200:
-        schema:
-          $ref: '#/components/schemas/Race'
-  /races/{race_id}/riders:
-    parameters:
-      - $ref: '#/components/parameters/Race'
-    get:
-      tags:
-        - races
-        - riders
-    description: Retrive a list of all riders assigned to a race
-    response:
-      200:
-        schema:
-          $ref: '#/components/schemas/RiderList'
-  /races/{race_id}/{checkpoint_id}:
-    parameters:
-      - $ref: '#/components/parameters/Race'
+      - $ref: '#/components/parameters/CheckpointID'
     get:
       tags:
         - races
@@ -246,26 +185,77 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/PostTracker'
+              $ref: '#/components/schemas/Tracker'
       responses:
         200:
           description: Tracker added to db successfully.
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/PostTrackerResponse'
+                $ref: '#/components/schemas/Tracker'
     get:
       tags:
         - trackers
+      summary: Return a list of trackers
+      parameters:
+        - $ref: '#/components/parameters/Limit'
+        - $ref: '#/components/parameters/IdStart'
+      responses:
+        200:
+          description: All trackers requested
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Trackers'
   /trackers/{tracker_id}:
+    parameters:
+      - $ref: '#/components/parameters/TrackerId'
     get:
       tags:
         - trackers
+      summary: Retrive information about a tracker
+      operationId: getTracker
+      responses:
+        200:
+          description: Data regarding requested tracker
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Tracker'
     patch:
       tags:
         - trackers
+      summary: Patch information about a tracker
+      operationId: getTracker
+      requestBody:
+        description: Change information about one tracker
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Tracker'
+      responses:
+        200:
+          description: Data regarding requested tracker
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Tracker'
 components:
   parameters:
+    TrackerId:
+      name: tracker_id
+      in: query
+      description: Tracker Id
+      required: true
+      schema:
+        $ref: '#/components/schemas/Id'
+    IdStart:
+      name: id
+      in: query
+      description: Id number to start response from
+      required: false
+      schema:
+        $ref: '#/components/schemas/Id'
     Limit:
       name: limit
       in: query
@@ -274,19 +264,6 @@ components:
       default: 25
       schema:
         $ref: '#/components/schemas/LimitParam'
-    RaceFilter:
-      name: race
-      in: query
-      description: Limit the return of riders to one or more races
-      schema:
-        $ref: '#/components/schemas/RaceParam'
-    Race:
-      name: race_id
-      in: path
-      description: Race Code
-      required: true
-      schema:
-        $ref: '#/components/schemas/RaceCode'
     CheckpointID:
       name: checkpoint_id
       in: path
@@ -300,8 +277,11 @@ components:
       description: Rider ID
       required: true
       schema:
-        $ref: '#/components/schemas/RiderId'
+        $ref: '#/components/schemas/Id'
   schemas:
+    RiderId:
+      type: integer
+      description: Id number of rider
     RemoveTracker:
       type: object
       properties:
@@ -316,12 +296,22 @@ components:
           $ref: '#/components/schemas/Id'
         depositPaid:
           $ref: '#/components/schemas/DepositAmount'
-    PostTracker:
+    Trackers:
+      type: object
+      properties:
+        trackers:
+          $ref: '#/components/schemas/TrackerList'
+        next:
+          $ref: '#/components/schemas/Next'
+    TrackerList:
+      type: array
+      items:
+        $ref: '#/components/schemas/Trackers'
+    Tracker:
       type: object
       properties:
         esnNumber:
           $ref: '#/components/schemas/ESNNumber'
-          required: true
         workingStatus:
           $ref: '#/components/schemas/WorkingStatus'
         loanStatus:
@@ -334,13 +324,6 @@ components:
           $ref: '#/components/schemas/timestamp'
         owner:
           $ref: '#/components/schemas/Owner'
-    PostTrackerResponse:
-      type: object
-      properties:
-        id:
-          $ref: '#/components/schemas/Id'
-        esnNumber:
-          $ref: '#/components/schemas/ESNNumber'
     Owner:
       type: string
       enum:
@@ -350,9 +333,6 @@ components:
     LimitParam:
       type: integer
       example: 5
-    RaceParam:
-      type: string
-      example: TCR06
     PatchRider:
       type:
         object
@@ -363,6 +343,12 @@ components:
           $ref: '#/components/schemas/LastName'
         email:
           $ref: '#/components/schemas/Email'
+        capNumber:
+          $ref: '#/components/schemas/CapNumber'
+    CapNumber:
+      type: integer
+      description: Cap number of rider
+      example: 171
     PostRider:
       type:
         object
@@ -376,6 +362,9 @@ components:
         email:
           $ref: '#/components/schemas/Email'
           required: true
+        capNumber:
+          $ref: '#/components/schemas/CapNumber'
+          required: true
     PostPatchRiderResponse:
       type:
         object
@@ -388,6 +377,17 @@ components:
           $ref: '#/components/schemas/Email'
         id:
           $ref: '#/components/schemas/Id'
+    Riders:
+      type: object
+      properties:
+        next:
+          $ref: '#/components/schemas/Next'
+        riders:
+          $ref: '#/components/schemas/RiderList'
+    Next:
+      type: string
+      description: URL for next response, with same number of objects as current response
+      example: '/riders?id=51&limit=50'
     RiderList:
       type: array
       items:
@@ -404,18 +404,13 @@ components:
           $ref: '#/components/schemas/Email'
         id:
           $ref: '#/components/schemas/Id'
+        capNumber:
+          $ref: '#/components/schemas/CapNumber'
         trackers:
           $ref: '#/components/schemas/RiderTrackerList'
-        totalDeposit:
-          $ref: '#/components/schemas/DepositAmount'
-        activeRace:
-          $ref: '#/components/schemas/ActiveRace'
-    ActiveRace:
-      type: object
-      properties:
-        raceCode:
-          $ref: '#/components/schemas/RaceCode'
-        checkPoints:
+        depositBalance:
+          $ref: '#/components/schemas/DepositBalance'
+        checkpoints:
           $ref: '#/components/schemas/CheckpointList'
     CheckpointList:
       type: array
@@ -429,8 +424,8 @@ components:
         timeSeen:
           $ref: '#/components/schemas/dateTime'
     Checkpoint:
-      type: string
-      example: CP2
+      type: integer
+      example: 1
     dateTime:
       type: object
       properties:
@@ -455,11 +450,17 @@ components:
           $ref: '#/components/schemas/WorkingStatus'
     Id:
       type: integer
+      description: Id number for various resources. Starting from 0, +1 iteration
       example: 142
     ESNNumber:
       type: string
       example: 123456789
+    DepositBalance:
+      description: Total amount owed to or from rider. If negative, rider is owed money - if positive, rider owes money
+      type: float
+      example: 200.4
     DepositAmount:
+      description: Money to be assigned to a tracker
       type: float
       example: 200.4
     LoanStatus:
@@ -474,25 +475,6 @@ components:
         - working
         - broken
         - unknown
-    RaceList:
-      type: array
-      items:
-        $ref: '#/components/schemas/Race'
-    Race:
-      type: object
-      properties:
-        dateStart:
-          $ref: '#/components/schemas/dateTime'
-        dateEnd:
-          $ref: '#/components/schemas/dateTime'
-        name:
-          $ref: '#/components/schemas/RaceName'
-        code:
-          $ref: '#/components/schemas/RaceCode'
-    RaceCode:
-      type: string
-      description: Code for Race
-      example: TCR06
     timestamp:
       type: integer
       description: Unix Epoch timestamp
@@ -500,10 +482,6 @@ components:
       type: string
       description: ISO Format Date Time string
       example: '2018-01-03T23:00:15'
-    RaceName:
-      type: string
-      description: Name of Race
-      example: Transcontinental no. 6
     FirstName:
       type: string
       description: First name of rider
