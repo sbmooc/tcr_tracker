@@ -92,12 +92,11 @@ class TestCRUD(DBTests):
             'id': 1,
             'first_name': 'Bobby',
             'last_name': 'Hill',
-            'gender': 'male',
             'email': 'hello@bob.com'
         }
         create(self.test_session, Riders, **data_to_add)
         data_in_riders = self.cur.execute('SELECT * FROM RIDERS;').fetchall()[0]
-        expected_results_riders = (1, 'Bobby', 'Hill', 'male', 'hello@bob.com')
+        expected_results_riders = (1, 'Bobby', 'Hill', 'hello@bob.com')
         data_in_tracker_locations = self.cur.execute('SELECT * FROM tracker_locations').fetchall()[0]
         expected_results_locations = (1, 'Riders')
         self.assertEqual(data_in_riders, expected_results_riders)

@@ -155,7 +155,7 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/CheckpointSeen'
+              $ref: '#/components/schemas/CheckpointArrival'
       responses:
         200:
           description: Successfully assigned rider to checkpoint
@@ -306,10 +306,12 @@ components:
     TrackerList:
       type: array
       items:
-        $ref: '#/components/schemas/Trackers'
+        $ref: '#/components/schemas/Tracker'
     Tracker:
       type: object
       properties:
+        id:
+          $ref: '#/components/schemas/Id'
         esnNumber:
           $ref: '#/components/schemas/ESNNumber'
         workingStatus:
@@ -416,6 +418,13 @@ components:
       type: array
       items:
         $ref: '#/components/schemas/CheckpointSeen'
+    CheckpointArrival:
+      type: object
+      properties:
+        checkPoint:
+          $ref: '#/components/schemas/Checkpoint'
+        time:
+          $ref: '#/components/schemas/timestamp'
     CheckpointSeen:
       type: object
       properties:
