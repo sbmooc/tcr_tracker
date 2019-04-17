@@ -19,6 +19,7 @@ class DateTimeEncoder(json.JSONEncoder):
 
 
 class BaseMixin(object):
+    # todo - add a comment here to work out why i do this!!
     def as_dict(self):
         result = {}
         for prop in class_mapper(self.__class__).iterate_properties:
@@ -30,7 +31,8 @@ class BaseMixin(object):
 class WorkingStatus(enum.Enum):
     working = 1
     broken = 2
-    unknown = 3
+    to_be_tested = 3
+    unknown = 4
 
 
 class LoanStatus(enum.Enum):
@@ -74,98 +76,42 @@ class Trackers(Base, BaseMixin):
     working_status = Column('current_status',
                             Enum(WorkingStatus))
     loan_status = Column('loan_status', Enum(LoanStatus))
-    deposit_amount = Column('deposit_amount', Float)
     last_test_date = Column('last_test', DATETIME)
     purchase = Column('purchase', DATETIME)
     warranty_expiry = Column('warranty', DATETIME)
     owner = Column('owner', Enum(OwnerChoices))
-    third_party_name = Column('third_party_name', String)
-    location_id = Column('location_id', ForeignKey('tracker_locations.id',
-                                                   ondelete='restrict', onupdate='restrict'))
+    rider_id = Column('rider_id', ForeignKey('riders.id'))
+    location_id = Column('location_id', ForeignKey('tracker_locations.id'))
 
 
-class TrackerRiders(Base, BaseMixin):
+class TrackerLocations(Base, BaseMixin):
 
     __tablename__ = 'tracker_riders'
     id = Column('id', Integer, primary_key=True)
-    tracker = Column('tracker_id', ForeignKey('trackers.id'))
-    rider = Column('rider_id', ForeignKey('rider_races.id'))
+    tracker = Column('tracker_id', ForeignKey('trackers.id'), nullable=False)
+    rider = Column('rider_id', ForeignKey('riders.id'))
+    location = Column('location_id', ForeignKey('tracker_locations.id'))
     deposit_amount = Column('deposit_amount', Float)
     deposit_status = Column('deposit_status', Enum(DepositStatus))
 
 
-class TrackerLocations(Base, BaseMixin):
-# todo sort this out!!
+class Locations(Base, BaseMixin):
     __tablename__ = 'tracker_locations'
     id = Column('id', Integer, primary_key=True)
-    types = Column(String)
+    location = Column(String, unique=True)
     trackers = relationship('Trackers')
-    __mapper_args__ = {
-        'polymorphic_on': types
-    }
 
 
-class Riders(TrackerLocations):
+class Riders(Base, BaseMixin):
 
     __tablename__ = 'riders'
-    # todo - sort this out, dont link to tracker_locations?
-    id = Column(Integer, ForeignKey('tracker_locations.id'), primary_key=True,
-                autoincrement=True)
+    id = Column(Integer, primary_key=True, autoincrement=True)
     first_name = Column('first_name', String)
     last_name = Column('last_name', String)
     email = Column('email', String)
-    rider_races = relationship('RiderRaces', backref='riders')
-
-    __mapper_args__ = {
-        'polymorphic_identity': 'Riders'
-    }
-
-
-class Races(Base, BaseMixin):
-
-    __tablename__ = 'races'
-    id = Column(Integer, primary_key=True, autoincrement=True)
-    date_start = Column('date_start', DATETIME)
-    date_end = Column('date_end', DATETIME)
-    name = Column('name', String)
-    code = Column('code', String)
-    rider_races = relationship('RiderRaces', backref='race')
-
-
-class RiderRaces(Base, BaseMixin):
-
-    __tablename__ = 'rider_races'
-    id = Column(Integer, primary_key=True, autoincrement=True)
-    race_id = Column(Integer, ForeignKey('races.id'))
-    rider_id = Column(Integer, ForeignKey('riders.id'))
-    category = Column('category', Enum(RiderCategories))
-    status = Column('status', Enum(RiderStatus))
     cap_number = Column('cap_number', String)
-    trackers = relationship('TrackerRiders', backref='riders')
-
-
-class PhysicalLocations(TrackerLocations):
-
-    __tablename__ = 'physical_locations'
-    id = Column(Integer, ForeignKey('tracker_locations.id'), primary_key=True,
-                autoincrement=True)
-    name = Column('physical_location', String)
-
-    __mapper_args__ = {
-        'polymorphic_identity': 'physical_locations'
-    }
-
-
-class PersonalLocations(TrackerLocations):
-
-    __tablename__ = 'personal_locations'
-    id = Column(Integer, ForeignKey('tracker_locations.id'), primary_key=True,
-                autoincrement=True)
-    name = Column('personal_location', String)
-
-    __mapper_args__ = {
-        'polymorphic_identity': 'personal_locations'
-    }
+    trackers = relationship('Trackers')
+    category = Column('category', Enum(RiderCategories))
 
 
 class Audit(Base):

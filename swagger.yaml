@@ -318,6 +318,10 @@ components:
           $ref: '#/components/schemas/WorkingStatus'
         loanStatus:
           $ref: '#/components/schemas/LoanStatus'
+        depositAmount:
+          $ref: '#/components/schemas/DepositAmount'
+        depositStatus:
+          $ref: '#/components/schemas/DepositStatus'
         lastTestDate:
           $ref: '#/components/schemas/timestamp'
         purchaseDate:
@@ -468,6 +472,15 @@ components:
       description: Total amount owed to or from rider. If negative, rider is owed money - if positive, rider owes money
       type: float
       example: 200.4
+    DepositStatus:
+      description: Status of deposit
+      type: string
+      enum:
+        - not_yet_paid
+        - paid
+        - to_be_refunded
+        - deposit_kept
+        - refunded
     DepositAmount:
       description: Money to be assigned to a tracker
       type: float
