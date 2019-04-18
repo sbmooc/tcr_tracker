@@ -7,10 +7,15 @@ from sqlalchemy import create_engine
 from sqlalchemy.orm import Session
 import os
 
-from tracker.models import Audit
+# from tracker.models import Audit
 
 
 def set_up_engine():
+    """
+    Return a db engine to use, as long as env variables are set properly.
+
+    :return:
+    """
     db_type = os.environ.get('DB_TYPE')
     db_uri = os.environ.get('DB_URI')
     if db_type is not None and db_uri is not None:
@@ -39,6 +44,15 @@ def session_scope(commit=True):
 
 
 def create(session, model, commit=True, **kwargs):
+    """
+    Create a row in db.
+
+    :param session: db session.
+    :param model: db model to create row in.
+    :param commit: bool as to whether commit immediately.
+    :param kwargs: dictionary of data to store in db.
+    :return: instance of model.
+    """
     instance = model(**kwargs)
     session.add(instance)
     if commit:
@@ -47,6 +61,7 @@ def create(session, model, commit=True, **kwargs):
 
 
 def get(session, model, **kwargs):
+    # todo docstring here
     instances = session.query(model).filter_by(**kwargs).all()
     if instances:
         return instances
@@ -55,6 +70,7 @@ def get(session, model, **kwargs):
 
 
 def get_or_create(session, model, commit=True, **kwargs):
+    # todo docstring here
     instances = session.query(model).filter_by(**kwargs).all()
     if instances:
         return instances, False
@@ -64,6 +80,7 @@ def get_or_create(session, model, commit=True, **kwargs):
 
 
 def get_and_delete(session, model, commit=True, **kwargs):
+    # todo docstring here
     instances = session.query(model).filter_by(**kwargs).all()
     if instances:
         for instance in instances:
@@ -75,19 +92,9 @@ def get_and_delete(session, model, commit=True, **kwargs):
         return False
 
 
-def audit(func):
-    def wrapper(*args, **kwargs):
-        data = args[1].as_dict()
-        name = args[1].__tablename__
-        audit_ = Audit(table=name,
-                       data=data)
-        args[0].add(audit_)
-        return func(*args, **kwargs)
-    return wrapper
-
-
 # @audit
 def update(session, model, update_, commit=True, **kwargs):
+    # todo docstring here
     instance = get(session, model, **kwargs)
     if instance:
         session.query(model).filter_by(**kwargs).update(update_)
@@ -95,3 +102,15 @@ def update(session, model, update_, commit=True, **kwargs):
             session.commit()
     else:
         return False
+
+# def audit(func):
+#     def wrapper(*args, **kwargs):
+#         data = args[1].as_dict()
+#         name = args[1].__tablename__
+#         audit_ = Audit(table=name,
+#                        data=data)
+#         args[0].add(audit_)
+#         return func(*args, **kwargs)
+#     return wrapper
+#
+#
