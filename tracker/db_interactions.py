@@ -4,6 +4,7 @@
 from contextlib import contextmanager
 
 from sqlalchemy import create_engine
+from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session
 import os
 
@@ -56,8 +57,11 @@ def create(session, model, commit=True, **kwargs):
     instance = model(**kwargs)
     session.add(instance)
     if commit:
-        session.commit()
-    return instance
+        try:
+            session.commit()
+            return instance
+        except IntegrityError:
+            return False
 
 
 def get(session, model, **kwargs):

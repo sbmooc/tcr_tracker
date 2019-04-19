@@ -65,7 +65,7 @@ class RiderStatus(enum.Enum):
 class RiderCategories(enum.Enum):
     male = 1
     female = 2
-    pair = 2
+    pair = 3
 
 
 class Trackers(Base, BaseMixin):
