@@ -12,7 +12,8 @@ from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import sessionmaker
 
 from tracker.models import Base, Riders, Trackers
-from tracker.db_interactions import create, get_or_create, get_and_delete, set_up_engine, session_scope, update
+from tracker.db_interactions import create, get_or_create, get_and_delete, set_up_engine, session_scope, update, \
+    get_riders
 from unittest.mock import patch, Mock
 
 
@@ -132,6 +133,42 @@ class TestCRUD(DBTests):
         test_get = get_or_create(self.test_session, Riders, **test_data)
         self.assertFalse(test_get[1])
         self.assertEqual(test_get[0][0].id, 1)
+
+    def test_get_list_Riders(self):
+
+        test_rider_1 = {
+            'id': 1,
+            'first_name': 'Bobby',
+            'last_name': 'Hill',
+            'email': 'hello@bob.com',
+            'cap_number': 100,
+            'category': 'male'
+        }
+        test_rider_2 = {
+            'id': 9,
+            'first_name': 'Bobby',
+            'last_name': 'Hill',
+            'email': 'hello@bob.com',
+            'cap_number': 100,
+            'category': 'male'
+        }
+        test_rider_3 = {
+            'id': 15,
+            'first_name': 'Bobby',
+            'last_name': 'Hill',
+            'email': 'hello@bob.com',
+            'cap_number': 100,
+            'category': 'male'
+        }
+        self.cur.execute('INSERT INTO riders VALUES (?, ?, ?, ?, ?, ?)', tuple(test_rider_1.values()))
+        self.cur.execute('INSERT INTO riders VALUES (?, ?, ?, ?, ?, ?)', tuple(test_rider_2.values()))
+        self.cur.execute('INSERT INTO riders VALUES (?, ?, ?, ?, ?, ?)', tuple(test_rider_3.values()))
+        self.conn.commit()
+        result = get_riders(self.test_session, 1, 10)
+        self.assertEqual(len(result[0]), 2)
+        self.assertEqual(result[0][0].id, 1)
+        self.assertEqual(result[0][1].id, 9)
+        self.assertEqual(result[1].id, 15)
 
     def test_create_wrong_category(self):
         data_to_add = {

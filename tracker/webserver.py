@@ -25,6 +25,13 @@ class RidersRoutes(Resource):
                                       status=201,
                                       mimetype='application/json')
 
+    def get(self):
+        start = request.args.start or 1
+        limit = request.args.end or 25
+        end = start + limit
+        with db.session_scope() as session:
+            data, last_rider = db.get_riders(session, start, end)
+
 
 if __name__ == '__main__':
     app.run(debug=True)

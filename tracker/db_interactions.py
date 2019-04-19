@@ -9,6 +9,7 @@ from sqlalchemy.orm import Session
 import os
 
 # from tracker.models import Audit
+from tracker.models import Riders
 
 
 def set_up_engine():
@@ -71,6 +72,20 @@ def get(session, model, **kwargs):
         return instances
     else:
         return False
+
+
+# todo unit test this
+def get_riders(session, start, end):
+    """
+    Returns a list of riders from start id for limit and return the id of the last rider in the db
+    :param session:
+    :param start:
+    :param limit:
+    :return:
+    """
+    last_rider = session.query(Riders).order_by(Riders.id.desc()).first()
+    data = session.query(Riders).filter(Riders.id >= start, Riders.id < end).all()
+    return data, last_rider
 
 
 def get_or_create(session, model, commit=True, **kwargs):

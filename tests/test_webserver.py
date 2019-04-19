@@ -3,7 +3,6 @@ from unittest.mock import mock_open
 
 from tracker.webserver import app
 
-
 class WebTests(TestCase):
 
     def setUp(self):
@@ -17,12 +16,11 @@ class TestValidator(WebTests):
         assert result.status_code == 200
         print(result)
 
-
+@mock.patch('tracker.webserver.Riders')
+@mock.patch('tracker.webserver.db.session_scope', mock_open())
+@mock.patch('tracker.webserver.db.create')
 class TestWebServer(WebTests):
 
-    @mock.patch('tracker.webserver.Riders')
-    @mock.patch('tracker.webserver.db.session_scope', mock_open())
-    @mock.patch('tracker.webserver.db.create')
     def test_post_rider(self, mock_create, mock_riders):
 
         rider_details = {
