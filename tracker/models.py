@@ -112,6 +112,8 @@ class Riders(Base, BaseMixin):
     cap_number = Column('cap_number', String)
     trackers = relationship('Trackers')
     category = Column('category', Enum(RiderCategories))
+    # todo link riders who are in pairs? or does the capnumber do that???
+    # todo add checkpoints stuff!
 
 
 class Audit(Base):
