@@ -14,8 +14,8 @@ from tracker.validator import api, validate_something, app
 #         return jsonify({'hello': 'world'})
 
 
-@api.route('/riders', methods=['POST'])
-class RidersRoutes(Resource):
+@api.route('/riders', methods=['POST', 'GET'])
+class RidersRequests(Resource):
 
     def post(self):
         rider_details = request.form
@@ -26,25 +26,58 @@ class RidersRoutes(Resource):
                                       mimetype='application/json')
 
     def get(self):
-        start = request.args.start or 1
-        limit = request.args.end or 25
+        start = request.args.get('start', 1, type=int)
+        limit = request.args.get('end', 25, type=int)
         end = start + limit
         with db.session_scope() as session:
             data, last_rider = db.get_riders(session, start, end)
+            # if data is empty
+            if last_rider is None:
+                # todo put messages in response codes
+                return app.response_class(status=204)
+            # if request starts later than the last rider id
             if start > last_rider.id:
                 # todo ensure that id is stored as an integer?
                 # return some sort of 4xx status
-                pass
-            elif len(data) == 0:
-                # return some sort of x status
-                pass
+                return app.response_class(status=416)
             else:
                 return app.response_class(response=json.dumps(data),
                                           status=200,
                                           mimetype='application/json')
 
 
+@api.route('/riders/<int:id>', methods=['GET', 'PATCH'])
+class IndividualRiderRequests(Resource):
+    def get(self, id):
+        with db.session_scope() as session:
+            data = db.get(session, Riders, **request.view_args)
+            if data:
+                return app.response_class(response=json.dumps(data),
+                                          status=200,
+                                          mimetype='application/json')
+            else:
+                return app.response_class(status=204)
 
+    def patch(self, id):
+        data_to_update = request.form
+        with db.session_scope() as session:
+            data = db.update(session, Riders, data_to_update, **request.view_args)
+            if data:
+                return app.response_class(response=json.dumps(data),
+                                          status=200,
+                                          mimetype='application/json')
+            else:
+                return app.response_class(status=204)
+
+
+@api.route('/riders/<int:id>/assignTracker')
+class IndividualRiderAddTracker(Resource):
+    pass
+
+
+@api.route('/riders/<int:id>/removeTracker')
+class IndividualRiderRemoveTracker(Resource):
+    pass
 
 if __name__ == '__main__':
     app.run(debug=True)

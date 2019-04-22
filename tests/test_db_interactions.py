@@ -17,6 +17,8 @@ from tracker.db_interactions import create, get_or_create, get_and_delete, set_u
 from unittest.mock import patch, Mock
 
 
+# todo add get tests
+
 class DBTests(TestCase):
 
     @classmethod
@@ -169,6 +171,11 @@ class TestCRUD(DBTests):
         self.assertEqual(result[0][0].id, 1)
         self.assertEqual(result[0][1].id, 9)
         self.assertEqual(result[1].id, 15)
+
+    def test_get_list_Riders_emptyDB(self):
+
+        result = get_riders(self.test_session, 1, 10)
+        self.assertEqual(result, ([], None))
 
     def test_create_wrong_category(self):
         data_to_add = {

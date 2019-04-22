@@ -114,11 +114,11 @@ def get_and_delete(session, model, commit=True, **kwargs):
 # @audit
 def update(session, model, update_, commit=True, **kwargs):
     # todo docstring here
-    instance = get(session, model, **kwargs)
-    if instance:
-        session.query(model).filter_by(**kwargs).update(update_)
+    no_rows_updated = session.query(model).filter_by(**kwargs).update(update_)
+    if no_rows_updated > 0:
         if commit:
             session.commit()
+            return get(session, model, **kwargs)
     else:
         return False
 

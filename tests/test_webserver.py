@@ -1,6 +1,8 @@
 from unittest import TestCase, mock
 from unittest.mock import mock_open
 
+from werkzeug.datastructures import ImmutableMultiDict
+
 from tracker.models import Riders
 from tracker.webserver import app
 
@@ -19,7 +21,7 @@ class TestValidator(WebTests):
 
 
 @mock.patch('tracker.webserver.db.session_scope', mock_open())
-class TestWebServer(WebTests):
+class TestRiderEndpoints(WebTests):
 
     @mock.patch('tracker.webserver.db.create')
     @mock.patch('tracker.webserver.Riders')
@@ -35,81 +37,59 @@ class TestWebServer(WebTests):
         self.test_client.post('/riders', data=rider_details)
         mock_create.assert_called_with(mock.ANY, mock_riders, **rider_details)
 
-
-class TestGetRiders(WebTests):
-
-    def setUp(self):
-
-        self.mock_rider_list = [
-            Riders(
-                id=1, first_name='Graham', last_name='Dodds', email='hello@dodds.com',
-                cap_number='150', category='pair'
-            ),
-            Riders(
-                id=2, first_name='James', last_name='Frost', email='hello@frost.com',
-                cap_number='190', category='male'
-
-            ),
-            Riders(
-                id=3, first_name='Sarah', last_name='Knight', email='hello@knight.com',
-                cap_number='177', category='female'
-            ),
-            Riders(
-                id=4, first_name='Rachel', last_name='Sking', email='hello@sking.com',
-                cap_number='200', category='female'
-
-            ),
-            Riders(
-                id=5, first_name='Emily', last_name='Skong', email='hello@skong.com',
-                cap_number='400', category='female'
-
-            )
-        ]
-
     @mock.patch('tracker.webserver.db.get_riders')
     def test_get_riders_simple(self, mock_get_riders):
-        mock_get_riders.return_value = (self.mock_rider_list, self.mock_rider_list[-1])
+        # return a mock list and a last rider with a high id
+        mock_get_riders.return_value = (['mock1', 'mock2'], Riders(id=100))
         # pass no parameters, to use defaults
-        self.test_client.get('/riders')
-        expected_result = [
-            {
-                'id': 1,
-                'first_name': 'Graham',
-                'last_name': 'Dodds',
-                'email': 'hello@dodds.com',
-                'cap_number': '150',
-                'category': 'pair'
-            },
-            {
-                'id': 2,
-                'first_name': 'James',
-                'last_name': 'Frost',
-                'email': 'hello@frost.com',
-                'cap_number': '190',
-                'category': 'pair'
-            },
-            {
-                'id': 3,
-                'first_name': 'Sarah',
-                'last_name': 'Knight',
-                'email': 'hello@knight.com',
-                'cap_number': '177',
-                'category': 'pair'
-            },
-            {
-                'id': 4,
-                'first_name': 'Rachel',
-                'last_name': 'Sking',
-                'email': 'hello@sking.com',
-                'cap_number': '200',
-                'category': 'pair'
-            },
-            {
-                'id': 5,
-                'first_name': 'Emily',
-                'last_name': 'Skong',
-                'email': 'hello@skong.com',
-                'cap_number': '400',
-                'category': 'pair'
-            }
-        ]
+        result = self.test_client.get('/riders')
+        # assert db.get_riders called with right params
+        mock_get_riders.assert_called_with(mock.ANY, 1, 26)
+        self.assertEqual(result.status_code, 200)
+        self.assertEqual(result.data, b'["mock1", "mock2"]')
+
+    @mock.patch('tracker.webserver.db.get_riders')
+    def test_get_riders_no_data(self, mock_get_riders):
+        # return a mock list and a last rider with a high id
+        mock_get_riders.return_value = ([], None)
+        # pass no parameters, to use defaults
+        result = self.test_client.get('/riders')
+        self.assertEqual(result.status_code, 204)
+
+    @mock.patch('tracker.webserver.db.get_riders')
+    def test_get_riders_bad_request(self, mock_get_riders):
+        # return a mock list and a last rider with a high id
+        mock_get_riders.return_value = ([], Riders(id=40))
+        # pass no parameters, to use defaults
+        result = self.test_client.get('/riders', query_string={'start': 50})
+        self.assertEqual(result.status_code, 416)
+
+    @mock.patch('tracker.webserver.db.get')
+    def test_get_individual(self, mock_get):
+        mock_get.return_value = 'mock_rider'
+        result = self.test_client.get('/riders/1')
+        mock_get.assert_called_with(mock.ANY, Riders, **{'id': 1})
+        self.assertEqual(result.status_code, 200)
+        self.assertEqual(result.data, b'"mock_rider"')
+
+    @mock.patch('tracker.webserver.db.get')
+    def test_get_individual_no_data(self, mock_get):
+        mock_get.return_value = None
+        result = self.test_client.get('/riders/1')
+        mock_get.assert_called_with(mock.ANY, Riders, **{'id': 1})
+        self.assertEqual(result.status_code, 204)
+
+    @mock.patch('tracker.webserver.db.update')
+    def test_patch_individual(self, mock_update):
+        mock_update.return_value = 'mock_rider'
+        result = self.test_client.patch('/riders/1', data={'cap_number': 100})
+        mock_update.assert_called_with(mock.ANY, Riders, ImmutableMultiDict([('cap_number', '100')]), **{'id': 1})
+        self.assertEqual(result.status_code, 200)
+        self.assertEqual(result.data, b'"mock_rider"')
+
+    @mock.patch('tracker.webserver.db.update')
+    def test_patch_individual_fail(self, mock_update):
+        mock_update.return_value = False
+        result = self.test_client.patch('/riders/1', data={'cap_number': 100})
+        mock_update.assert_called_with(mock.ANY, Riders, ImmutableMultiDict([('cap_number', '100')]), **{'id': 1})
+        self.assertEqual(result.status_code, 204)
