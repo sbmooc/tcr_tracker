@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 from flask import jsonify, request, json
-from flask_restplus import Resource
+from flask_restplus import Resource, fields
 
 from tracker import db_interactions as db
 from tracker.models import Riders
@@ -45,9 +45,20 @@ class RidersRequests(Resource):
                                           status=200,
                                           mimetype='application/json')
 
+# riderModel = {
+#     'firstName': fields.String(attribute='first_name'),
+#     'lastName': fields.String(attribute='last_name'),
+#     'email': fields.String,
+#     'capNumber': fields.String(attribute='cap_number')
+# }
+
 
 @api.route('/riders/<int:id>', methods=['GET', 'PATCH'])
 class IndividualRiderRequests(Resource):
+    def __init__(self):
+        super(IndividualRiderRequests, self).__init__()
+
+    # @api.marshal_with(riderModel)
     def get(self, id):
         with db.session_scope() as session:
             data = db.get(session, Riders, **request.view_args)
@@ -58,7 +69,9 @@ class IndividualRiderRequests(Resource):
             else:
                 return app.response_class(status=204)
 
+    # todo use json-merge-patch application type here
     def patch(self, id):
+        # todo sort slight differences in request naming dictionaries
         data_to_update = request.form
         with db.session_scope() as session:
             data = db.update(session, Riders, data_to_update, **request.view_args)

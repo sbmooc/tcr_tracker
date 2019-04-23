@@ -93,3 +93,12 @@ class TestRiderEndpoints(WebTests):
         result = self.test_client.patch('/riders/1', data={'cap_number': 100})
         mock_update.assert_called_with(mock.ANY, Riders, ImmutableMultiDict([('cap_number', '100')]), **{'id': 1})
         self.assertEqual(result.status_code, 204)
+
+    def test_add_tracker_to_rider(self):
+        result = self.test_client.post('/riders/1/assignTracker', data={'trackerId': 142, 'depositPaid': 100})
+        pass
+
+    def test_remove_tracker_from_rider(self):
+        result = self.test_client.post('/riders/1/removeTracker', data={'trackerId': 142, 'depositToBeReturned': 100})
+        pass
+
