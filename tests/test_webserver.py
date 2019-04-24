@@ -11,8 +11,10 @@ class WebTests(TestCase):
     def setUp(self):
         self.test_client = app.test_client()
         self.mock_riders = [
-            Riders(id=1, first_name='Bob', last_name='Green', cap_number='100'),
-            Riders(id=2, first_name='Lyle', last_name='Taylor', cap_number='105'),
+            Riders(id=1, first_name='Bob', last_name='Green', cap_number='100', email='hello@email.com',
+                   category='male', trackers=[]),
+            Riders(id=2, first_name='Lyle', last_name='Taylor', cap_number='105', email='hello@email.com',
+                   category='male', trackers=[]),
         ]
 
     @staticmethod
@@ -36,9 +38,7 @@ class TestRiderEndpoints(WebTests):
         self.test_client.post('/riders', json=rider_details)
         mock_create.assert_called_with(mock.ANY, mock_riders, **rider_details)
 
-    @mock.patch('tracker.webserver.db.create')
-    @mock.patch('tracker.webserver.Riders')
-    def test_post_rider_error(self, mock_riders, mock_create):
+    def test_post_rider_error(self):
         rider_details = {
             "nonsense": 'Bob',
             "lastName": "Green",
@@ -46,8 +46,8 @@ class TestRiderEndpoints(WebTests):
             "capNumber": '171',
             'category': 'male',
         }
-        self.test_client.post('/riders', json=rider_details)
-        mock_create.assert_called_with(mock.ANY, mock_riders, **rider_details)
+        response = self.test_client.post('/riders', json=rider_details)
+        self.assertEqual(response.status_code, 400)
 
     @mock.patch('tracker.webserver.db.get_riders')
     def test_get_riders_simple(self, mock_get_riders):
@@ -64,14 +64,18 @@ class TestRiderEndpoints(WebTests):
               "firstName": "Bob",
               "lastName": "Green",
               "id": 1,
-              "trackers": []
+              "trackers": [],
+              "category": "male",
+              "email": "hello@email.com"
             },
             {
               "capNumber": "105",
               "firstName": "Lyle",
               "lastName": "Taylor",
               "id": 2,
-              "trackers": []
+              "trackers": [],
+              "category": "male",
+              "email": "hello@email.com"
 
             }
         ]
@@ -103,7 +107,9 @@ class TestRiderEndpoints(WebTests):
                           "firstName": "Bob",
                           "lastName": "Green",
                           "id": 1,
-                          "trackers": []}
+                          "trackers": [],
+                          "category": "male",
+                          "email": "hello@email.com"}
         self.assertEqual(result.json,
                          expected_result)
 
@@ -117,16 +123,16 @@ class TestRiderEndpoints(WebTests):
     @mock.patch('tracker.webserver.db.update')
     def test_patch_individual(self, mock_update):
         mock_update.return_value = 'mock_rider'
-        result = self.test_client.patch('/riders/1', data={'cap_number': 100})
-        mock_update.assert_called_with(mock.ANY, Riders, ImmutableMultiDict([('cap_number', '100')]), **{'id': 1})
+        result = self.test_client.patch('/riders/1', json={'cap_number': 100})
+        mock_update.assert_called_with(mock.ANY, Riders, {'cap_number': 100}, id=1)
         self.assertEqual(result.status_code, 200)
         self.assertEqual(result.data, b'"mock_rider"')
 
     @mock.patch('tracker.webserver.db.update')
     def test_patch_individual_fail(self, mock_update):
         mock_update.return_value = False
-        result = self.test_client.patch('/riders/1', data={'cap_number': 100})
-        mock_update.assert_called_with(mock.ANY, Riders, ImmutableMultiDict([('cap_number', '100')]), **{'id': 1})
+        result = self.test_client.patch('/riders/1', json={'cap_number': 100})
+        mock_update.assert_called_with(mock.ANY, Riders, {'cap_number': 100}, id=1)
         self.assertEqual(result.status_code, 204)
 
     def test_add_tracker_to_rider(self):

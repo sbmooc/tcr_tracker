@@ -23,11 +23,22 @@ class RiderPostSchema(ModelSchema):
     firstName = fields.String(attribute='first_name', required=True)
     lastName = fields.String(attribute='last_name', required=True)
     capNumber = fields.String(attribute='cap_number', required=True)
+    email = fields.Email(required=True)
 
     class Meta:
         model = Riders
         fields = ('firstName', 'lastName', 'capNumber', 'trackers', 'email', 'category')
-        strict = True
+
+
+class RiderPatchSchema(ModelSchema):
+    firstName = fields.String(attribute='first_name')
+    lastName = fields.String(attribute='last_name')
+    capNumber = fields.String(attribute='cap_number')
+    email = fields.Email()
+
+    class Meta:
+        model = Riders
+        fields = ('firstName', 'lastName', 'capNumber', 'trackers', 'email', 'category')
 
 # riderResponseModel = api.model('Riders', {
 #     'firstName': fields.String(attribute='first_name'),

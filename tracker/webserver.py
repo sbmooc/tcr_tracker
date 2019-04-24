@@ -20,8 +20,7 @@ def post_riders():
     try:
         rider_request.load(post_data, transient=True)
     except ValidationError:
-        # todo add 4xx status code here
-        return app.response_class()
+        return app.response_class(status=400)
     with db.session_scope() as session:
         # todo change db_interactions to input with serialized models
         data = db.create(session, Riders, **post_data)
@@ -47,7 +46,7 @@ def get_riders():
             # return some sort of 4xx status
             return app.response_class(status=416)
         else:
-            return app.response_class(response=riders_response.dumps(data).data,
+            return app.response_class(response=riders_response.dumps(data),
                                       status=200,
                                       mimetype='application/json')
 
@@ -57,7 +56,7 @@ def get_rider(id):
     with db.session_scope() as session:
         data_ = db.get(session, Riders, **request.view_args)
         if data_:
-            return app.response_class(response=rider_response.dumps(data_).data,
+            return app.response_class(response=rider_response.dumps(data_),
                                       mimetype='application/json')
         else:
             return app.response_class(status=204)
@@ -66,8 +65,7 @@ def get_rider(id):
 # todo use json-merge-patch application type here
 @app.route('/riders/<int:id>', methods=['PATCH'])
 def patch_rider(id):
-    # todo sort slight differences in request naming dictionaries
-    data_to_update = request.form
+    data_to_update = request.get_json()
     with db.session_scope() as session:
         data = db.update(session, Riders, data_to_update, **request.view_args)
         if data:
