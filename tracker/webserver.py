@@ -1,21 +1,40 @@
 #!/usr/bin/env python
-from flask import jsonify, request, json
-from flask_restplus import Resource, fields
+from flask import jsonify, request, json, Flask, Request
 
 from tracker import db_interactions as db
 from tracker.models import Riders
-from tracker.validator import api, validate_something, app
+
+app = Flask(__name__)
+
+# riderResponseModel = api.model('Riders', {
+#     'firstName': fields.String(attribute='first_name'),
+#     'lastName': fields.String(attribute='last_name'),
+#     'email': fields.String,
+#     'capNumber': fields.String(attribute='cap_number'),
+#     'id': fields.Integer,
+#     'trackers': fields.List(fields.Integer),
+#     'category': fields.String
+# })
+#
+# riderPostRequest = api.model('Riders', {
+#     'firstName': fields.String(attribute='first_name'),
+#     'lastName': fields.String(attribute='last_name'),
+#     'email': fields.String,
+#     'category': fields.String,
+#     'capNumber': fields.Integer
+# })
+#
+# riderPostResponse = api.model('Riders', {
+#     'firstName': fields.String(attribute='first_name'),
+#     'lastName': fields.String(attribute='last_name'),
+#     'email': fields.String,
+#     'category': fields.String,
+#     'id': fields.Integer
+# })
 
 
-# @api.route('/hello', methods=['GET'])
-# class HelloWorld(Resource):
-#     @api.expect(validate_something, validate=True)
-#     def get(self):
-#         return jsonify({'hello': 'world'})
-
-
-@api.route('/riders', methods=['POST', 'GET'])
-class RidersRequests(Resource):
+@app.route('/riders', methods=['POST', 'GET'])
+class RidersRequests(Request):
 
     def post(self):
         rider_details = request.form
@@ -45,27 +64,15 @@ class RidersRequests(Resource):
                                           status=200,
                                           mimetype='application/json')
 
-# riderModel = {
-#     'firstName': fields.String(attribute='first_name'),
-#     'lastName': fields.String(attribute='last_name'),
-#     'email': fields.String,
-#     'capNumber': fields.String(attribute='cap_number')
-# }
 
+@app.route('/riders/<int:id>', methods=['GET', 'PATCH'])
+class IndividualRiderRequests(Request):
 
-@api.route('/riders/<int:id>', methods=['GET', 'PATCH'])
-class IndividualRiderRequests(Resource):
-    def __init__(self):
-        super(IndividualRiderRequests, self).__init__()
-
-    # @api.marshal_with(riderModel)
     def get(self, id):
         with db.session_scope() as session:
             data = db.get(session, Riders, **request.view_args)
             if data:
-                return app.response_class(response=json.dumps(data),
-                                          status=200,
-                                          mimetype='application/json')
+                return data
             else:
                 return app.response_class(status=204)
 
@@ -83,7 +90,7 @@ class IndividualRiderRequests(Resource):
                 return app.response_class(status=204)
 
 
-@api.route('/riders/<int:id>/assignTracker')
+@app.route('/riders/<int:id>/assignTracker')
 class IndividualRiderAddTracker(Resource):
     pass
 

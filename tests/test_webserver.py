@@ -28,10 +28,10 @@ class TestRiderEndpoints(WebTests):
     def test_post_rider(self, mock_riders, mock_create):
 
         rider_details = {
-            "first_name": "Graham",
-            "last_name": "Dodds",
+            "firstName": "Graham",
+            "lastName": "Dodds",
             "email": "hello@email.com",
-            "cap_number": '171',
+            "capNumber": '171',
             'category': 'male'
         }
         self.test_client.post('/riders', data=rider_details)
@@ -66,7 +66,7 @@ class TestRiderEndpoints(WebTests):
 
     @mock.patch('tracker.webserver.db.get')
     def test_get_individual(self, mock_get):
-        mock_get.return_value = 'mock_rider'
+        mock_get.return_value = Riders(id=1)
         result = self.test_client.get('/riders/1')
         mock_get.assert_called_with(mock.ANY, Riders, **{'id': 1})
         self.assertEqual(result.status_code, 200)
