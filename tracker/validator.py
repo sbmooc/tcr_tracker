@@ -1,4 +1,4 @@
-from marshmallow import fields
+from marshmallow import fields, Schema
 from marshmallow_sqlalchemy import ModelSchema
 from .models import TrackerLocations, Trackers, Riders, Locations
 
@@ -39,6 +39,28 @@ class RiderPatchSchema(ModelSchema):
     class Meta:
         model = Riders
         fields = ('firstName', 'lastName', 'capNumber', 'trackers', 'email', 'category')
+
+
+class RiderAssignTracker(Schema):
+    trackerId = fields.String(attribute='tracker_id', required=True)
+    depositPaid = fields.String(attribute='deposit_paid', required=True)
+
+class TrackerPostSchema(ModelSchema):
+
+    # esn_number = Column('esn_number', String)
+    # working_status = Column('current_status',
+    #                         Enum(WorkingStatus))
+    # loan_status = Column('loan_status', Enum(LoanStatus))
+    # last_test_date = Column('last_test', DATETIME)
+    # purchase = Column('purchase', DATETIME)
+    # warranty_expiry = Column('warranty', DATETIME)
+    # owner = Column('owner', Enum(OwnerChoices))
+    # rider_id = Column('rider_id', ForeignKey('riders.id'))
+    # location_id = Column('location_id', ForeignKey('tracker_locations.id'))
+
+    class Meta:
+        model = Trackers
+
 
 # riderResponseModel = api.model('Riders', {
 #     'firstName': fields.String(attribute='first_name'),

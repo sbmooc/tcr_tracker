@@ -5,20 +5,22 @@ from marshmallow import ValidationError, RAISE
 from tracker import db_interactions as db
 from tracker.models import Riders
 
-from .validator import RiderResponseSchema, RiderPostSchema
+from .validator import RiderResponseSchema, RiderPostSchema, RiderPatchSchema
 
 app = Flask(__name__)
 
 rider_response = RiderResponseSchema()
 riders_response = RiderResponseSchema(many=True)
-rider_request = RiderPostSchema(unknown=RAISE)
+rider_post_request = RiderPostSchema(unknown=RAISE)
+rider_patch_request = RiderPatchSchema(unknown=RAISE)
 
+tracker_post_request = TrackerPostSchema(unknown=RAISE)
 
 @app.route('/riders', methods=['POST'])
 def post_riders():
     post_data = request.get_json()
     try:
-        rider_request.load(post_data, transient=True)
+        rider_post_request.load(post_data, transient=True)
     except ValidationError:
         return app.response_class(status=400)
     with db.session_scope() as session:
@@ -66,6 +68,10 @@ def get_rider(id):
 @app.route('/riders/<int:id>', methods=['PATCH'])
 def patch_rider(id):
     data_to_update = request.get_json()
+    try:
+        rider_patch_request.load(data_to_update, transient=True)
+    except ValidationError:
+        return app.response_class(status=400)
     with db.session_scope() as session:
         data = db.update(session, Riders, data_to_update, **request.view_args)
         if data:
@@ -75,11 +81,25 @@ def patch_rider(id):
         else:
             return app.response_class(status=204)
 
+# @app.route('/trackers', methods=['POST'])
+# def post_trackers():
+#     post_data = request.get_json()
+#     try:
+#         rider_request.load(post_data, transient=True)
+#     except ValidationError:
+#         return app.response_class(status=400)
+#     with db.session_scope() as session:
+#         # todo change db_interactions to input with serialized models
+#         data = db.create(session, Riders, **post_data)
+#         return app.response_class(response=rider_response.dumps(data).data,
+#                                   status=201,
+#                                   mimetype='application/json')
 
 # @app.route('/riders/<int:id>/assignTracker')
-# class IndividualRiderAddTracker(Resource):
-#     pass
-#
+# def assign_tracker(id):
+#     data_to_update = request.get_json()
+#     with db.session_scope() as session:
+#         data = db.update(session, Riders, )
 #
 # @api.route('/riders/<int:id>/removeTracker')
 # class IndividualRiderRemoveTracker(Resource):

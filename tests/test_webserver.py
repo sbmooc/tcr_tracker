@@ -123,16 +123,17 @@ class TestRiderEndpoints(WebTests):
     @mock.patch('tracker.webserver.db.update')
     def test_patch_individual(self, mock_update):
         mock_update.return_value = 'mock_rider'
-        result = self.test_client.patch('/riders/1', json={'cap_number': 100})
-        mock_update.assert_called_with(mock.ANY, Riders, {'cap_number': 100}, id=1)
+        result = self.test_client.patch('/riders/1', json={'capNumber': '100'})
+        mock_update.assert_called_with(mock.ANY, Riders, {'capNumber': '100'}, id=1)
         self.assertEqual(result.status_code, 200)
         self.assertEqual(result.data, b'"mock_rider"')
 
     @mock.patch('tracker.webserver.db.update')
     def test_patch_individual_fail(self, mock_update):
         mock_update.return_value = False
-        result = self.test_client.patch('/riders/1', json={'cap_number': 100})
-        mock_update.assert_called_with(mock.ANY, Riders, {'cap_number': 100}, id=1)
+        # todo this should use application/json-merge-patch
+        result = self.test_client.patch('/riders/1', json={'capNumber': '100'})
+        mock_update.assert_called_with(mock.ANY, Riders, {'capNumber': '100'}, id=1)
         self.assertEqual(result.status_code, 204)
 
     def test_add_tracker_to_rider(self):
