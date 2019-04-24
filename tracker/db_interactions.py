@@ -44,6 +44,23 @@ def session_scope(commit=True):
     else:
         yield session
 
+def create_(session, instance, commit=True):
+    """
+    Create a row in db.
+
+    :param session: db session.
+    :param model: db model to create row in.
+    :param commit: bool as to whether commit immediately.
+    :param kwargs: dictionary of data to store in db.
+    :return: instance of model.
+    """
+    session.add(instance)
+    if commit:
+        try:
+            session.commit()
+            return instance
+        except IntegrityError:
+            return False
 
 def create(session, model, commit=True, **kwargs):
     """
