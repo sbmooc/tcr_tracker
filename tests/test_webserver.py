@@ -136,6 +136,18 @@ class TestRiderEndpoints(WebTests):
         mock_update.assert_called_with(mock.ANY, Riders, {'capNumber': '100'}, id=1)
         self.assertEqual(result.status_code, 204)
 
+    # todo mock out the validation in these tests and test separately
+
+    def test_post_tracker(self):
+        mock_tracker = {
+            'esnNumber': '1234',
+            'workingStatus': 'working',
+            'lastTestDate': '2001-01-01',
+            'warrantyExpiry': '2019-01-01'
+        }
+        result = self.test_client.post('/trackers', json=mock_tracker)
+        a = 'a'
+
     def test_add_tracker_to_rider(self):
         result = self.test_client.post('/riders/1/assignTracker', data={'trackerId': 142, 'depositPaid': 100})
         pass

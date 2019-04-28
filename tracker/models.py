@@ -3,7 +3,7 @@ import json
 from datetime import datetime
 
 from sqlalchemy import Column, Integer, String, DATETIME, \
-    ForeignKey, Float, Enum, Boolean, JSON
+    ForeignKey, Float, Enum, Boolean, JSON, DATE
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import relationship, class_mapper, ColumnProperty
 
@@ -76,9 +76,9 @@ class Trackers(Base, BaseMixin):
     working_status = Column('current_status',
                             Enum(WorkingStatus))
     loan_status = Column('loan_status', Enum(LoanStatus))
-    last_test_date = Column('last_test', DATETIME)
-    purchase = Column('purchase', DATETIME)
-    warranty_expiry = Column('warranty', DATETIME)
+    last_test_date = Column('last_test', DATE)
+    purchase = Column('purchase', DATE)
+    warranty_expiry = Column('warranty', DATE)
     owner = Column('owner', Enum(OwnerChoices))
     rider_id = Column('rider_id', ForeignKey('riders.id'))
     location_id = Column('location_id', ForeignKey('tracker_locations.id'))

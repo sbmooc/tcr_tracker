@@ -21,7 +21,6 @@ MarkupSafe==1.1.0
 marshmallow==3.0.0rc5
 marshmallow-sqlalchemy==0.16.2
 more-itertools==5.0.0
-pkg-resources==0.0.0
 pluggy==0.8.0
 py==1.7.0
 pyrsistent==0.14.11

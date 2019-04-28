@@ -12,9 +12,9 @@ info:
     #url: ""
 #host: "TBA"
 #basePath: "TBA"
-externalDocs:
-  description:
-  url:
+#externalDocs:
+#  description:
+#  url:
 tags:
 - name: riders
   description: Operations concerning riders
@@ -170,10 +170,10 @@ paths:
       tags:
         - races
       description: See a list of riders who have passed through a checkpoint
-    response:
-      200:
-        schema:
-          $ref: '#/components/schemas/RiderList'
+      responses:
+        200:
+          schema:
+            $ref: '#/components/schemas/RiderList'
   /trackers:
     post:
       tags:
@@ -185,7 +185,7 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/Tracker'
+              $ref: '#/components/schemas/PostTracker'
       responses:
         200:
           description: Tracker added to db successfully.
@@ -307,6 +307,23 @@ components:
       type: array
       items:
         $ref: '#/components/schemas/Tracker'
+    PostTracker:
+      type: object
+      properties:
+        esnNumber:
+          $ref: '#/components/schemas/ESNNumber'
+        workingStatus:
+          $ref: '#/components/schemas/WorkingStatus'
+        loanStatus:
+          $ref: '#/components/schemas/LoanStatus'
+        lastTestDate:
+          $ref: '#/components/schemas/timestamp'
+        purchaseDate:
+          $ref: '#/components/schemas/timestamp'
+        warrantyExpiry:
+          $ref: '#/components/schemas/timestamp'
+        owner:
+          $ref: '#/components/schemas/Owner'
     Tracker:
       type: object
       properties:
@@ -361,16 +378,12 @@ components:
       properties:
         firstName:
           $ref: '#/components/schemas/FirstName'
-          required: true
         lastName:
           $ref: '#/components/schemas/LastName'
-          required: true
         email:
           $ref: '#/components/schemas/Email'
-          required: true
         capNumber:
           $ref: '#/components/schemas/CapNumber'
-          required: true
     PostPatchRiderResponse:
       type:
         object
@@ -405,7 +418,7 @@ components:
         firstName:
           $ref: '#/components/schemas/FirstName'
         lastName:
-          $ref: '#/components/schemas/lastName'
+          $ref: '#/components/schemas/LastName'
         email:
           $ref: '#/components/schemas/Email'
         id:

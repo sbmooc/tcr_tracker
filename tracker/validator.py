@@ -1,11 +1,21 @@
-from marshmallow import fields, Schema
+from marshmallow import fields, Schema, RAISE
 from marshmallow_sqlalchemy import ModelSchema
 from .models import TrackerLocations, Trackers, Riders, Locations
 
 
+
+# todo fix this!!!
 class TrackerSchema(ModelSchema):
+    esnNumber = fields.String(attribute='esn_number')
+    workingStatus = fields.String(attribute='working_status')
+    lastTestDate = fields.Date(attribute='last_test_date')
+    warrantyExpiry = fields.Date(attribute='warranty_expiry')
+    loanStatus = fields.Date(attribute='loan_status')
+    purchaseDate = fields.Date(attribute='purchase')
+
     class Meta:
         model = Trackers
+        fields = ('id', 'esnNumber', 'workingStatus', 'loan_status', 'purchaseDate')
 
 
 class RiderResponseSchema(ModelSchema):
@@ -45,50 +55,27 @@ class RiderAssignTracker(Schema):
     trackerId = fields.String(attribute='tracker_id', required=True)
     depositPaid = fields.String(attribute='deposit_paid', required=True)
 
+
 class TrackerPostSchema(ModelSchema):
 
-    # esn_number = Column('esn_number', String)
-    # working_status = Column('current_status',
-    #                         Enum(WorkingStatus))
-    # loan_status = Column('loan_status', Enum(LoanStatus))
-    # last_test_date = Column('last_test', DATETIME)
-    # purchase = Column('purchase', DATETIME)
-    # warranty_expiry = Column('warranty', DATETIME)
-    # owner = Column('owner', Enum(OwnerChoices))
-    # rider_id = Column('rider_id', ForeignKey('riders.id'))
-    # location_id = Column('location_id', ForeignKey('tracker_locations.id'))
+    esnNumber = fields.String(attribute='esn_number')
+    workingStatus = fields.String(attribute='working_status')
+    lastTestDate = fields.Date(attribute='last_test')
+    warrantyExpiry = fields.Date(attribute='warranty_expiry')
 
     class Meta:
         model = Trackers
+        fields = ('esnNumber', 'workingStatus', 'lastTestDate', 'warrantyExpiry', 'owner')
 
 
-# riderResponseModel = api.model('Riders', {
-#     'firstName': fields.String(attribute='first_name'),
-#     'lastName': fields.String(attribute='last_name'),
-#     'email': fields.String,
-#     'capNumber': fields.String(attribute='cap_number'),
-#     'id': fields.Integer,
-#     'trackers': fields.List(fields.Integer),
-#     'category': fields.String
-# })
-#
-# riderPostRequest = api.model('Riders', {
-#     'firstName': fields.String(attribute='first_name'),
-#     'lastName': fields.String(attribute='last_name'),
-#     'email': fields.String,
-#     'category': fields.String,
-#     'capNumber': fields.Integer
-# })
-#
-# riderPostResponse = api.model('Riders', {
-#     'firstName': fields.String(attribute='first_name'),
-#     'lastName': fields.String(attribute='last_name'),
-#     'email': fields.String,
-#     'category': fields.String,
-#     'id': fields.Integer
-# })
-# validate_something = api.model(
-#     'Resource', {
-#         'name': fields.String
-#     })
+
+rider_response = RiderResponseSchema()
+riders_response = RiderResponseSchema(many=True)
+rider_post_request = RiderPostSchema(unknown=RAISE)
+rider_patch_request = RiderPatchSchema(unknown=RAISE)
+
+tracker_post_request = TrackerPostSchema(unknown=RAISE)
+tracker_response = TrackerSchema()
+
+
 

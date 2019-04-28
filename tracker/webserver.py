@@ -3,22 +3,20 @@ from flask import jsonify, request, json, Flask, Request
 from marshmallow import ValidationError, RAISE
 
 from tracker import db_interactions as db
-from tracker.models import Riders
-
-from .validator import RiderResponseSchema, RiderPostSchema, RiderPatchSchema
+from tracker.models import Riders, Trackers
+from .validator import rider_post_request, rider_patch_request, rider_response, riders_response, tracker_post_request, \
+    tracker_response
 
 app = Flask(__name__)
 
-rider_response = RiderResponseSchema()
-riders_response = RiderResponseSchema(many=True)
-rider_post_request = RiderPostSchema(unknown=RAISE)
-rider_patch_request = RiderPatchSchema(unknown=RAISE)
 
-tracker_post_request = TrackerPostSchema(unknown=RAISE)
+# tracker_post_request = TrackerPostSchema(unknown=RAISE)
+
 
 @app.route('/riders', methods=['POST'])
 def post_riders():
     post_data = request.get_json()
+    #todo turn this into a sexy decorator
     try:
         rider_post_request.load(post_data, transient=True)
     except ValidationError:
@@ -81,19 +79,20 @@ def patch_rider(id):
         else:
             return app.response_class(status=204)
 
-# @app.route('/trackers', methods=['POST'])
-# def post_trackers():
-#     post_data = request.get_json()
-#     try:
-#         rider_request.load(post_data, transient=True)
-#     except ValidationError:
-#         return app.response_class(status=400)
-#     with db.session_scope() as session:
-#         # todo change db_interactions to input with serialized models
-#         data = db.create(session, Riders, **post_data)
-#         return app.response_class(response=rider_response.dumps(data).data,
-#                                   status=201,
-#                                   mimetype='application/json')
+
+@app.route('/trackers', methods=['POST'])
+def post_trackers():
+    post_data = request.get_json()
+    try:
+        tracker_post_request.load(post_data, transient=True)
+    except ValidationError:
+        return app.response_class(status=400)
+    with db.session_scope() as session:
+        # todo change db_interactions to input with serialized models
+        data = db.create(session, Trackers, **post_data)
+        return app.response_class(response=tracker_response.dumps(data).data,
+                                  status=201,
+                                  mimetype='application/json')
 
 # @app.route('/riders/<int:id>/assignTracker')
 # def assign_tracker(id):

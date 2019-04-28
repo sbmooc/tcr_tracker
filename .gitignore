@@ -182,3 +182,5 @@ dmypy.json
 # Pyre type checker
 .pyre/
 
+#local changes
+tcr_venv/

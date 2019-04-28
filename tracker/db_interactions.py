@@ -44,6 +44,7 @@ def session_scope(commit=True):
     else:
         yield session
 
+
 def create_(session, instance, commit=True):
     """
     Create a row in db.
@@ -61,6 +62,7 @@ def create_(session, instance, commit=True):
             return instance
         except IntegrityError:
             return False
+
 
 def create(session, model, commit=True, **kwargs):
     """
