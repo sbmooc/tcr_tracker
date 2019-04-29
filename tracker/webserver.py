@@ -15,13 +15,7 @@ app = Flask(__name__)
 @app.route('/riders', methods=['POST'])
 def post_riders():
     post_data = request.get_json()
-    # todo turn this into a sexy decorator
-    try:
-        vd.rider_post_request.load(post_data, transient=True)
-    except ValidationError:
-        return app.response_class(status=400)
     with db.session_scope() as session:
-        # todo change db_interactions to input with serialized models
         data = db.create(session, Riders, **post_data)
         return app.response_class(response=vd.rider_response.dumps(data).data,
                                   status=201,
@@ -65,10 +59,6 @@ def get_rider(id):
 @app.route('/riders/<int:id>', methods=['PATCH'])
 def patch_rider(id):
     data_to_update = request.get_json()
-    try:
-        vd.rider_patch_request.load(data_to_update, transient=True)
-    except ValidationError:
-        return app.response_class(status=400)
     with db.session_scope() as session:
         data = db.update(session, Riders, data_to_update, **request.view_args)
         if data:
@@ -83,12 +73,7 @@ def patch_rider(id):
 @app.route('/trackers', methods=['POST'])
 def post_trackers():
     post_data = request.get_json()
-    try:
-        vd.tracker_post_request.load(post_data, transient=True)
-    except ValidationError:
-        return app.response_class(status=400)
     with db.session_scope() as session:
-        # todo change db_interactions to input with serialized models
         data = db.create(session, Trackers, **post_data)
         return app.response_class(response=vd.tracker_response.dumps(data).data,
                                   status=201,
@@ -132,10 +117,6 @@ def get_tracker(id):
 @app.route('/trackers/<int:id>', methods=['PATCH'])
 def patch_tracker(id):
     data_to_update = request.get_json()
-    try:
-        vd.tracker_patch_request.load(data_to_update, transient=True)
-    except ValidationError:
-        return app.response_class(status=400)
     with db.session_scope() as session:
         data = db.update(session, Trackers, data_to_update, **request.view_args)
         if data:
