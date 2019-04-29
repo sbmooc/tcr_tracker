@@ -77,10 +77,10 @@ class Trackers(Base, BaseMixin):
                             Enum(WorkingStatus))
     loan_status = Column('loan_status', Enum(LoanStatus))
     last_test_date = Column('last_test', DATE)
-    purchase = Column('purchase', DATE)
+    purchase_date = Column('purchase', DATE)
     warranty_expiry = Column('warranty', DATE)
     owner = Column('owner', Enum(OwnerChoices))
-    rider_id = Column('rider_id', ForeignKey('riders.id'))
+    rider = Column('rider', ForeignKey('riders.id'))
     location_id = Column('location_id', ForeignKey('tracker_locations.id'))
 
 

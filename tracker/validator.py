@@ -3,6 +3,14 @@ from marshmallow_sqlalchemy import ModelSchema
 from .models import TrackerLocations, Trackers, Riders, Locations
 
 
+class RiderSchema(ModelSchema):
+    firstName = fields.String(attribute='first_name')
+    lastName = fields.String(attribute='last_name')
+    capNumber = fields.String(attribute='cap_number')
+
+    class Meta:
+        model = Riders
+
 
 # todo fix this!!!
 class TrackerSchema(ModelSchema):
@@ -10,18 +18,16 @@ class TrackerSchema(ModelSchema):
     workingStatus = fields.String(attribute='working_status')
     lastTestDate = fields.Date(attribute='last_test_date')
     warrantyExpiry = fields.Date(attribute='warranty_expiry')
-    loanStatus = fields.Date(attribute='loan_status')
-    purchaseDate = fields.Date(attribute='purchase')
+    loanStatus = fields.String(attribute='loan_status')
+    purchaseDate = fields.Date(attribute='purchase_date')
+    rider = fields.Nested(RiderSchema)
 
     class Meta:
         model = Trackers
-        fields = ('id', 'esnNumber', 'workingStatus', 'loan_status', 'purchaseDate')
+        fields = ('id', 'esnNumber', 'workingStatus', 'loanStatus', 'purchaseDate')
 
 
-class RiderResponseSchema(ModelSchema):
-    firstName = fields.String(attribute='first_name')
-    lastName = fields.String(attribute='last_name')
-    capNumber = fields.String(attribute='cap_number')
+class RiderResponseSchema(RiderSchema):
     tracker = fields.Nested(TrackerSchema, many=True)
 
     class Meta:
@@ -68,6 +74,17 @@ class TrackerPostSchema(ModelSchema):
         fields = ('esnNumber', 'workingStatus', 'lastTestDate', 'warrantyExpiry', 'owner')
 
 
+class TrackerPatchSchema(ModelSchema):
+
+    esnNumber = fields.String(attribute='esn_number')
+    workingStatus = fields.String(attribute='working_status')
+    lastTestDate = fields.Date(attribute='last_test')
+    warrantyExpiry = fields.Date(attribute='warranty_expiry')
+
+    class Meta:
+        model = Trackers
+        fields = ('esnNumber', 'workingStatus', 'lastTestDate', 'warrantyExpiry', 'owner')
+
 
 rider_response = RiderResponseSchema()
 riders_response = RiderResponseSchema(many=True)
@@ -76,6 +93,11 @@ rider_patch_request = RiderPatchSchema(unknown=RAISE)
 
 tracker_post_request = TrackerPostSchema(unknown=RAISE)
 tracker_response = TrackerSchema()
+trackers_response = TrackerSchema(many=True)
+tracker_patch_request = TrackerPatchSchema()
+
+
+
 
 
 

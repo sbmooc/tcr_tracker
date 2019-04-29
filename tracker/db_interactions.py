@@ -94,17 +94,18 @@ def get(session, model, **kwargs):
 
 
 # todo unit test this
-def get_riders(session, start, end):
+def get_resources(session, start, end, model):
     """
-    Returns a list of riders from start id for limit and return the id of the last rider in the db
+    Returns a list of resources from start id for limit and return the id of the last rider in the db
     :param session:
     :param start:
-    :param limit:
+    :param end:
+    :param model:
     :return:
     """
-    last_rider = session.query(Riders).order_by(Riders.id.desc()).first()
-    data = session.query(Riders).filter(Riders.id >= start, Riders.id < end).all()
-    return data, last_rider
+    last_resource = session.query(model).order_by(model.id.desc()).first()
+    data = session.query(model).filter(model.id >= start, model.id < end).all()
+    return data, last_resource
 
 
 def get_or_create(session, model, commit=True, **kwargs):
@@ -133,8 +134,8 @@ def get_and_delete(session, model, commit=True, **kwargs):
 # @audit
 def update(session, model, update_, commit=True, **kwargs):
     # todo docstring here
-    no_rows_updated = session.query(model).filter_by(**kwargs).update(update_)
-    if no_rows_updated > 0:
+    n_rows_updated = session.query(model).filter_by(**kwargs).update(update_)
+    if n_rows_updated > 0:
         if commit:
             session.commit()
             return get(session, model, **kwargs)
