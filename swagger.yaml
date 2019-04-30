@@ -28,8 +28,7 @@ paths:
       tags:
       - riders
       summary: Add a new rider
-      description:
-      operationId: addRider
+      operationId: tracker.webserver.post_riders
       requestBody:
         description: Basic rider details to add
         required: True
@@ -48,7 +47,7 @@ paths:
       tags:
         - riders
       summary: Get a list of riders
-      operationId: getRiderList
+      operationId: tracker.webserver.get_riders
       parameters:
         - $ref: '#/components/parameters/Limit'
         - $ref: '#/components/parameters/IdStart'
@@ -61,6 +60,7 @@ paths:
                 $ref: '#/components/schemas/Riders'
   /riders/{rider_id}:
     get:
+      operationId: tracker.webserver.get_rider
       tags:
         - riders
       summary: Retrive information about one rider
@@ -74,10 +74,10 @@ paths:
               schema:
                 $ref: '#/components/schemas/Rider'
     patch:
+      operationId: tracker.webserver.patch_rider
       tags:
         - riders
       summary: Change basic information about a rider
-      operationId: patchRider
       parameters:
         - $ref: '#/components/parameters/RiderId'
       requestBody:
@@ -93,113 +93,110 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/PostPatchRiderResponse'
-  /riders/{rider_id}/assignTracker:
-    post:
-      parameters:
-        - $ref: '#/components/parameters/RiderId'
-      tags:
-        - riders
-        - trackers
-      summary: Assign a tracker to a rider
-      operationId: addTrackerToRider
-      requestBody:
-        required: True
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/AssignTracker'
-      responses:
-        200:
-          description: List of trackers currently assigned to rider
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/RiderTrackerList'
-        # error tracker already assigned to someone else?
-        #
-  /riders/{rider_id}/removeTracker:
-    post:
-      parameters:
-        - $ref: '#/components/parameters/RiderId'
-      tags:
-        - riders
-        - trackers
-      summary: Remove a tracker from a rider
-      operationId: removeTrackerFromRider
-      requestBody:
-        required: True
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/RemoveTracker'
-      responses:
-        200:
-          description: List of trackers currently assigned to rider
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/RiderTrackerList'
+#  /riders/{rider_id}/assignTracker:
+#    post:
+#      parameters:
+#        - $ref: '#/components/parameters/RiderId'
+#      tags:
+#        - riders
+#        - trackers
+#      summary: Assign a tracker to a rider
+#      requestBody:
+#        required: True
+#        content:
+#          application/json:
+#            schema:
+#              $ref: '#/components/schemas/AssignTracker'
+#      responses:
+#        200:
+#          description: Rider object, showing all trackers assigned to rider
+#          content:
+#            application/json:
+#              schema:
+#                $ref: '#/components/schemas/Rider'
+#        # error tracker already assigned to someone else?
+#        #
+#  /riders/{rider_id}/removeTracker:
+#    post:
+#      parameters:
+#        - $ref: '#/components/parameters/RiderId'
+#      tags:
+#        - riders
+#        - trackers
+#      summary: Remove a tracker from a rider
+#      requestBody:
+#        required: True
+#        content:
+#          application/json:
+#            schema:
+#              $ref: '#/components/schemas/RemoveTracker'
+#      responses:
+#        200:
+#          description: Rider object, showing all trackers assigned to rider
+#          content:
+#            application/json:
+#              schema:
+#                $ref: '#/components/schemas/Rider'
         # error tracker not assigned to rider
-  /riders/{rider_id}/{checkpoint_id}/assignArrival:
-    post:
-      parameters:
-        - $ref: '#/components/parameters/RiderId'
-        - $ref: '#/components/parameters/CheckpointID'
-      tags:
-        - riders
-        - races
-      summary: Assign arrival of a rider to a checkpoint
-      operationId: assignArrivalOfRider
-      requestBody:
-        required: True
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/CheckpointArrival'
-      responses:
-        200:
-          description: Successfully assigned rider to checkpoint
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/CheckpointList'
-  /races/{checkpoint_id}:
-    parameters:
-      - $ref: '#/components/parameters/CheckpointID'
-    get:
-      tags:
-        - races
-      description: See a list of riders who have passed through a checkpoint
-      responses:
-        200:
-          schema:
-            $ref: '#/components/schemas/RiderList'
-    post:
-      tags:
-        - races
-      description: Add a new checkpoint
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              $ref: '#todo'
-      responses:
-        200:
-          schema:
-            $ref: #todo
+#  /riders/{rider_id}/{checkpoint_id}/assignArrival:
+#    post:
+#      parameters:
+#        - $ref: '#/components/parameters/RiderId'
+#        - $ref: '#/components/parameters/CheckpointID'
+#      tags:
+#        - riders
+#        - races
+#      summary: Assign arrival of a rider to a checkpoint
+#      requestBody:
+#        required: True
+#        content:
+#          application/json:
+#            schema:
+#              $ref: '#/components/schemas/CheckpointArrival'
+#      responses:
+#        200:
+#          description: Successfully assigned rider to checkpoint
+#          content:
+#            application/json:
+#              schema:
+#                $ref: '#/components/schemas/CheckpointList'
+#  /races/{checkpoint_id}:
+#    parameters:
+#      - $ref: '#/components/parameters/CheckpointID'
+#    get:
+#      tags:
+#        - races
+#      description: See a list of riders who have passed through a checkpoint
+#      responses:
+#        200:
+#          schema:
+#            $ref: '#/components/schemas/RiderList'
+#    post:
+#      tags:
+#        - races
+#      description: Add a new checkpoint
+#      requestBody:
+#        required: true
+#        content:
+#          application/json:
+#            schema:
+#              $ref: '#todo'
+#      responses:
+#        200:
+#          schema:
+#            $ref: #todo
   /trackers:
     post:
+      operationId: tracker.webserver.post_trackers
       tags:
         - trackers
       summary: Add a new tracker
-      operationId: addNewTracker
       requestBody:
         required: True
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/PostTracker'
+              $ref: '#/components/schemas/PostPatchTracker'
       responses:
         200:
           description: Tracker added to db successfully.
@@ -208,6 +205,7 @@ paths:
               schema:
                 $ref: '#/components/schemas/Tracker'
     get:
+      operationId: tracker.webserver.get_trackers
       tags:
         - trackers
       summary: Return a list of trackers
@@ -225,10 +223,10 @@ paths:
     parameters:
       - $ref: '#/components/parameters/TrackerId'
     get:
+      operationId: tracker.webserver.get_tracker
       tags:
         - trackers
       summary: Retrive information about a tracker
-      operationId: getTracker
       responses:
         200:
           description: Data regarding requested tracker
@@ -237,16 +235,16 @@ paths:
               schema:
                 $ref: '#/components/schemas/Tracker'
     patch:
+      operationId: tracker.webserver.patch_tracker
       tags:
         - trackers
       summary: Patch information about a tracker
-      operationId: getTracker
       requestBody:
         description: Change information about one tracker
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/Tracker'
+              $ref: '#/components/schemas/PostPatchTracker'
       responses:
         200:
           description: Data regarding requested tracker
@@ -258,13 +256,13 @@ components:
   parameters:
     TrackerId:
       name: tracker_id
-      in: query
+      in: path
       description: Tracker Id
       required: true
       schema:
         $ref: '#/components/schemas/Id'
     IdStart:
-      name: id
+      name: start
       in: query
       description: Id number to start response from
       required: false
@@ -275,7 +273,6 @@ components:
       in: query
       description: Limit the number of responses to return
       required: false
-      default: 25
       schema:
         $ref: '#/components/schemas/LimitParam'
     CheckpointID:
@@ -321,23 +318,23 @@ components:
       type: array
       items:
         $ref: '#/components/schemas/Tracker'
-    PostTracker:
+    PostPatchTracker:
       type: object
       properties:
         esnNumber:
           $ref: '#/components/schemas/ESNNumber'
         workingStatus:
           $ref: '#/components/schemas/WorkingStatus'
-        loanStatus:
-          $ref: '#/components/schemas/LoanStatus'
         lastTestDate:
-          $ref: '#/components/schemas/timestamp'
+          $ref: '#/components/schemas/date'
         purchaseDate:
-          $ref: '#/components/schemas/timestamp'
+          $ref: '#/components/schemas/date'
         warrantyExpiry:
-          $ref: '#/components/schemas/timestamp'
+          $ref: '#/components/schemas/date'
         owner:
           $ref: '#/components/schemas/Owner'
+        url:
+          $ref: '#/components/schemas/trackerUrl'
     Tracker:
       type: object
       properties:
@@ -347,20 +344,36 @@ components:
           $ref: '#/components/schemas/ESNNumber'
         workingStatus:
           $ref: '#/components/schemas/WorkingStatus'
-        loanStatus:
-          $ref: '#/components/schemas/LoanStatus'
         depositAmount:
           $ref: '#/components/schemas/DepositAmount'
-        depositStatus:
-          $ref: '#/components/schemas/DepositStatus'
         lastTestDate:
-          $ref: '#/components/schemas/timestamp'
+          $ref: '#/components/schemas/date'
         purchaseDate:
-          $ref: '#/components/schemas/timestamp'
+          $ref: '#/components/schemas/date'
         warrantyExpiry:
-          $ref: '#/components/schemas/timestamp'
+          $ref: '#/components/schemas/date'
         owner:
           $ref: '#/components/schemas/Owner'
+        url:
+          $ref: '#/components/schemas/trackerUrl'
+        rider:
+          $ref: '#/components/schemas/trackerRider'
+    trackerRider:
+      description: Short description of rider that tracker is assigned to
+      type: object
+      properties:
+        id:
+          $ref: '#/components/schemas/RiderId'
+        capNumber:
+          $ref: '#/components/schemas/CapNumber'
+        firstName:
+          $ref: '#/components/schemas/FirstName'
+        lastName:
+          $ref: '#/components/schemas/LastName'
+    trackerUrl:
+      description: Spot URL for the tracker
+      type: string
+      example: www.bbc.co.uk
     Owner:
       type: string
       enum:
@@ -382,10 +395,18 @@ components:
           $ref: '#/components/schemas/Email'
         capNumber:
           $ref: '#/components/schemas/CapNumber'
+        category:
+          $ref: '#/components/schemas/Category'
     CapNumber:
       type: integer
       description: Cap number of rider
       example: 171
+    Category:
+      type: string
+      enum:
+        - male
+        - female
+        - pair
     PostRider:
       type:
         object
@@ -398,18 +419,22 @@ components:
           $ref: '#/components/schemas/Email'
         capNumber:
           $ref: '#/components/schemas/CapNumber'
+        category:
+          $ref: '#/components/schemas/Category'
     PostPatchRiderResponse:
       type:
         object
       properties:
+        id:
+          $ref: '#/components/schemas/Id'
         firstName:
           $ref: '#/components/schemas/FirstName'
         lastName:
           $ref: '#/components/schemas/LastName'
         email:
           $ref: '#/components/schemas/Email'
-        id:
-          $ref: '#/components/schemas/Id'
+        category:
+          $ref: '#/components/schemas/Category'
     Riders:
       type: object
       properties:
@@ -429,20 +454,24 @@ components:
       type:
         object
       properties:
+        id:
+          $ref: '#/components/schemas/Id'
         firstName:
           $ref: '#/components/schemas/FirstName'
         lastName:
           $ref: '#/components/schemas/LastName'
         email:
           $ref: '#/components/schemas/Email'
-        id:
-          $ref: '#/components/schemas/Id'
+        category:
+          $ref: '#/components/schemas/Category'
         capNumber:
           $ref: '#/components/schemas/CapNumber'
         trackers:
           $ref: '#/components/schemas/RiderTrackerList'
         depositBalance:
           $ref: '#/components/schemas/DepositBalance'
+        depositToBePaidBack:
+          $ref: '#/components/schemas/DepositToBePaidBack'
         checkpoints:
           $ref: '#/components/schemas/CheckpointList'
     CheckpointList:
@@ -495,9 +524,13 @@ components:
     ESNNumber:
       type: string
       example: 123456789
+    DepositToBePaidBack:
+      description: Amount of money to be paid back from Lost Dot to the rider
+      type: number
+      example: 0
     DepositBalance:
-      description: Total amount owed to or from rider. If negative, rider is owed money - if positive, rider owes money
-      type: float
+      description: Current deposit balance
+      type: number
       example: 200.4
     DepositStatus:
       description: Status of deposit
@@ -510,7 +543,7 @@ components:
         - refunded
     DepositAmount:
       description: Money to be assigned to a tracker
-      type: float
+      type: number
       example: 200.4
     LoanStatus:
       type: string
@@ -529,8 +562,14 @@ components:
       description: Unix Epoch timestamp
     timeReadable:
       type: string
+      format: date-time
       description: ISO Format Date Time string
       example: '2018-01-03T23:00:15'
+    date:
+      type: string
+      format: date
+      description: ISO format date string
+      example: '2018-01-01'
     FirstName:
       type: string
       description: First name of rider
@@ -541,5 +580,6 @@ components:
       example: Dodds
     Email:
       type: string
+      format: email
       example: hello@email.com
 
