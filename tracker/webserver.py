@@ -4,7 +4,7 @@ from marshmallow import ValidationError, RAISE
 
 from tracker import db_interactions as db
 from tracker.models import Riders, Trackers
-from tracker import validator as vd
+from tracker import serializer as sl
 
 app = Flask(__name__)
 
@@ -17,7 +17,7 @@ def post_riders():
     post_data = request.get_json()
     with db.session_scope() as session:
         data = db.create(session, Riders, **post_data)
-        return app.response_class(response=vd.rider_response.dumps(data).data,
+        return app.response_class(response=sl.rider_response.dumps(data).data,
                                   status=201,
                                   mimetype='application/json')
 
@@ -39,7 +39,7 @@ def get_riders():
             # return some sort of 4xx status
             return app.response_class(status=416)
         else:
-            return app.response_class(response=vd.riders_response.dumps(data),
+            return app.response_class(response=sl.riders_response.dumps(data),
                                       status=200,
                                       mimetype='application/json')
 
@@ -49,7 +49,7 @@ def get_rider(id):
     with db.session_scope() as session:
         data_ = db.get(session, Riders, **request.view_args)
         if data_:
-            return app.response_class(response=vd.rider_response.dumps(data_),
+            return app.response_class(response=sl.rider_response.dumps(data_),
                                       mimetype='application/json')
         else:
             return app.response_class(status=204)
@@ -75,7 +75,7 @@ def post_trackers():
     post_data = request.get_json()
     with db.session_scope() as session:
         data = db.create(session, Trackers, **post_data)
-        return app.response_class(response=vd.tracker_response.dumps(data).data,
+        return app.response_class(response=sl.tracker_response.dumps(data).data,
                                   status=201,
                                   mimetype='application/json')
 
@@ -97,7 +97,7 @@ def get_trackers():
             # return some sort of 4xx status
             return app.response_class(status=416)
         else:
-            return app.response_class(response=vd.trackers_response.dumps(data),
+            return app.response_class(response=sl.trackers_response.dumps(data),
                                       status=200,
                                       mimetype='application/json')
 
@@ -107,7 +107,7 @@ def get_tracker(id):
     with db.session_scope() as session:
         data_ = db.get(session, Trackers, **request.view_args)
         if data_:
-            return app.response_class(response=vd.tracker_response.dumps(data_),
+            return app.response_class(response=sl.tracker_response.dumps(data_),
                                       mimetype='application/json')
         else:
             return app.response_class(status=204)
@@ -120,7 +120,7 @@ def patch_tracker(id):
     with db.session_scope() as session:
         data = db.update(session, Trackers, data_to_update, **request.view_args)
         if data:
-            return app.response_class(response=vd.tracker_response.dumps(data),
+            return app.response_class(response=sl.tracker_response.dumps(data),
                                       status=200,
                                       mimetype='application/json')
         else:

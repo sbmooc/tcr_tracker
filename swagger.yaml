@@ -93,7 +93,7 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/PostPatchRiderResponse'
-#  /riders/{rider_id}/assignTracker:
+#  /riders/{rider_id}/trackers/{tracker_id}/addTrackerAssignment:
 #    post:
 #      parameters:
 #        - $ref: '#/components/parameters/RiderId'
@@ -116,7 +116,7 @@ paths:
 #                $ref: '#/components/schemas/Rider'
 #        # error tracker already assigned to someone else?
 #        #
-#  /riders/{rider_id}/removeTracker:
+#  /riders/{rider_id}/trackers/{tracker_id}/removeTrackerAssignment:
 #    post:
 #      parameters:
 #        - $ref: '#/components/parameters/RiderId'
@@ -138,6 +138,10 @@ paths:
 #              schema:
 #                $ref: '#/components/schemas/Rider'
         # error tracker not assigned to rider
+#  /riders/{rider_id}/trackers/{tracker_id}/addTrackerPossession:
+     # todo
+#  /riders/{rider_id}/trackers/{tracker_id}/removeTrackerPossession:
+#    # todo
 #  /riders/{rider_id}/{checkpoint_id}/assignArrival:
 #    post:
 #      parameters:
@@ -356,8 +360,39 @@ components:
           $ref: '#/components/schemas/Owner'
         url:
           $ref: '#/components/schemas/trackerUrl'
-        rider:
+        riderAssignment:
           $ref: '#/components/schemas/trackerRider'
+        possession:
+          $ref: '#/components/schemas/Possession'
+        events:
+          $ref: '#/components/schemas/TrackerEvents'
+        notes:
+          $ref: '#/components/schemas/Notes'
+    TrackerEvents:
+      type: object
+      properties:
+        classification:
+          $ref: '#/components/schemas/TrackerEventClassification'
+        user:
+          $ref: '#/components/schemas/EventUser'
+        timestamp:
+          $ref: '#/components/schemas/timestamp'
+        notes:
+          $ref: '#/components/schemas/Notes'
+    TrackerEventClassification:
+      type: string
+      enum:
+        - tracker_tested
+        - tracker_assignment_to_rider
+        - tracker_assignment_remove
+        - tracker_possession_to_rider
+        - tracker_possesion_from_rider
+    Possession:
+      type: string
+      enum:
+        - lost_dot
+        - rider
+        - lost
     trackerRider:
       description: Short description of rider that tracker is assigned to
       type: object
@@ -470,10 +505,46 @@ components:
           $ref: '#/components/schemas/RiderTrackerList'
         depositBalance:
           $ref: '#/components/schemas/DepositBalance'
-        depositToBePaidBack:
-          $ref: '#/components/schemas/DepositToBePaidBack'
         checkpoints:
           $ref: '#/components/schemas/CheckpointList'
+        events:
+          $ref: '#/components/schemas/RiderEvents'
+    RiderEvents:
+      type: array
+      items:
+        $ref: '#/components/schemas/RiderEvent'
+    RiderEvent:
+      type: object
+      properties:
+        classification:
+          $ref: '#/components/schemas/RiderEventClassification'
+        user:
+          $ref: '#/components/schemas/EventUser'
+        timestamp:
+          $ref: '#/components/schemas/timestamp'
+        notes:
+          $ref: '#/components/schemas/Notes'
+    Notes:
+      type: string
+      description: A place to store notes
+    RiderEventClassification:
+      type: string
+      enum:
+        - paymentIn
+        - paymentOut
+        - startRace
+        - finishRace
+    EventUser:
+      type: object
+      properties:
+        id:
+          $ref: '#/components/schemas/Id'
+        firstName:
+          $ref: '#/components/schemas/FirstName'
+        lastName:
+          $ref: '#/components/schemas/LastName'
+        email:
+          $ref: '#/components/schemas/Email'
     CheckpointList:
       type: array
       items:
@@ -524,33 +595,14 @@ components:
     ESNNumber:
       type: string
       example: 123456789
-    DepositToBePaidBack:
-      description: Amount of money to be paid back from Lost Dot to the rider
-      type: number
-      example: 0
     DepositBalance:
       description: Current deposit balance
       type: number
       example: 200.4
-    DepositStatus:
-      description: Status of deposit
-      type: string
-      enum:
-        - not_yet_paid
-        - paid
-        - to_be_refunded
-        - deposit_kept
-        - refunded
     DepositAmount:
       description: Money to be assigned to a tracker
       type: number
       example: 200.4
-    LoanStatus:
-      type: string
-      enum:
-        - with_rider
-        - not_loaned
-        - other
     WorkingStatus:
       type: string
       enum:
@@ -572,11 +624,11 @@ components:
       example: '2018-01-01'
     FirstName:
       type: string
-      description: First name of rider
+      description: First name of rider or user
       example: Graham
     LastName:
       type: string
-      description: Last name of rider
+      description: Last name of rider or user
       example: Dodds
     Email:
       type: string
