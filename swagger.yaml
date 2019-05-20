@@ -90,7 +90,30 @@ paths:
                   next:
                     $ref: '#/components/schemas/Next'
                   riders:
-                    $ref: '#/components/schemas/RiderList'
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        id:
+                          $ref: '#/components/schemas/Id'
+                        firstName:
+                          $ref: '#/components/schemas/FirstName'
+                        lastName:
+                          $ref: '#/components/schemas/LastName'
+                        email:
+                          $ref: '#/components/schemas/Email'
+                        category:
+                          $ref: '#/components/schemas/Category'
+                        capNumber:
+                          $ref: '#/components/schemas/CapNumber'
+                        depositBalance:
+                          $ref: '#/components/schemas/DepositBalance'
+                        trackers:
+                          $ref: '#/components/schemas/RiderTrackerList'
+                        checkpoints:
+                          $ref: '#/components/schemas/CheckpointList'
+                        events:
+                          $ref: '#/components/schemas/RiderEvents'
   /riders/{rider_id}:
     get:
       operationId: tracker.webserver.get_rider

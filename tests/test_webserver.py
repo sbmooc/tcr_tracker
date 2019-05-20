@@ -2,8 +2,6 @@ from datetime import datetime
 from unittest import TestCase, mock
 from unittest.mock import mock_open
 
-from werkzeug.datastructures import ImmutableMultiDict
-
 from tracker.models import Riders, Trackers
 from tracker.webserver import app
 

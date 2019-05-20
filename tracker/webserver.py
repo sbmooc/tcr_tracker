@@ -1,15 +1,11 @@
 #!/usr/bin/env python
-from flask import jsonify, request, json, Flask, Request
-from marshmallow import ValidationError, RAISE
+from flask import request, json, Flask
 
 from tracker import db_interactions as db
 from tracker.models import Riders, Trackers
 from tracker import serializer as sl
 
 app = Flask(__name__)
-
-
-# tracker_post_request = TrackerPostSchema(unknown=RAISE)
 
 
 @app.route('/riders', methods=['POST'])
@@ -47,9 +43,9 @@ def get_riders():
 @app.route('/riders/<int:id>', methods=['GET'])
 def get_rider(id):
     with db.session_scope() as session:
-        data_ = db.get(session, Riders, **request.view_args)
-        if data_:
-            return app.response_class(response=sl.rider_response.dumps(data_),
+        data = db.get(session, Riders, **request.view_args)
+        if data:
+            return app.response_class(response=sl.rider_response.dumps(data),
                                       mimetype='application/json')
         else:
             return app.response_class(status=204)
@@ -105,9 +101,9 @@ def get_trackers():
 @app.route('/trackers/<int:id>', methods=['GET'])
 def get_tracker(id):
     with db.session_scope() as session:
-        data_ = db.get(session, Trackers, **request.view_args)
-        if data_:
-            return app.response_class(response=sl.tracker_response.dumps(data_),
+        data = db.get(session, Trackers, **request.view_args)
+        if data:
+            return app.response_class(response=sl.tracker_response.dumps(data),
                                       mimetype='application/json')
         else:
             return app.response_class(status=204)
@@ -126,15 +122,25 @@ def patch_tracker(id):
         else:
             return app.response_class(status=204)
 
-# @app.route('/riders/<int:id>/assignTracker')
-# def assign_tracker(id):
-#     data_to_update = request.get_json()
-#     with db.session_scope() as session:
-#         data = db.update(session, Riders, )
-#
-# @api.route('/riders/<int:id>/removeTracker')
-# class IndividualRiderRemoveTracker(Resource):
-#     pass
+@app.route('/riders/<int:rider_id>/trackers/<int:tracker_id>/trackerAssignment',
+           methods=['POST'])
+def tracker_assignment_post(rider_id, tracker_id):
+    pass
+
+@app.route('/riders/<int:rider_id>/trackers/<int:tracker_id>/trackerAssignment',
+           methods=['DELETE'])
+def tracker_assignment_delete(rider_id, tracker_id):
+    pass
+
+@app.route('/riders/<int:rider_id>/trackers/<int:tracker_id>/trackerPossession',
+           methods=['POST'])
+def tracker_possession_post(rider_id, tracker_id):
+    pass
+
+@app.route('/riders/<int:rider_id>/trackers/<int:tracker_id>/trackerPossession',
+           methods=['DELETE'])
+def tracker_possession_delete(rider_id, tracker_id):
+    pass
 
 if __name__ == '__main__':
     app.run(debug=True)
