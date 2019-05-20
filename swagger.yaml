@@ -35,14 +35,42 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/PostRider'
+              type:
+                object
+              properties:
+                firstName:
+                  $ref: '#/components/schemas/FirstName'
+                lastName:
+                  $ref: '#/components/schemas/LastName'
+                email:
+                  $ref: '#/components/schemas/Email'
+                capNumber:
+                  $ref: '#/components/schemas/CapNumber'
+                category:
+                  $ref: '#/components/schemas/Category'
+                notes:
+                  $ref: '#/components/schemas/notes'
       responses:
         200:
           description: Basic rider details
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/PostPatchRiderResponse'
+                type:
+                  object
+                properties:
+                  id:
+                    $ref: '#/components/schemas/Id'
+                  firstName:
+                    $ref: '#/components/schemas/FirstName'
+                  lastName:
+                    $ref: '#/components/schemas/LastName'
+                  email:
+                    $ref: '#/components/schemas/Email'
+                  category:
+                    $ref: '#/components/schemas/Category'
+                  notes:
+                    $ref: '#/components/schemas/notes'
     get:
       tags:
         - riders
@@ -57,7 +85,12 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/Riders'
+                type: object
+                properties:
+                  next:
+                    $ref: '#/components/schemas/Next'
+                  riders:
+                    $ref: '#/components/schemas/RiderList'
   /riders/{rider_id}:
     get:
       operationId: tracker.webserver.get_rider
@@ -72,7 +105,31 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/Rider'
+                type:
+                  object
+                properties:
+                  id:
+                    $ref: '#/components/schemas/Id'
+                  firstName:
+                    $ref: '#/components/schemas/FirstName'
+                  lastName:
+                    $ref: '#/components/schemas/LastName'
+                  email:
+                    $ref: '#/components/schemas/Email'
+                  category:
+                    $ref: '#/components/schemas/Category'
+                  capNumber:
+                    $ref: '#/components/schemas/CapNumber'
+                  trackers:
+                    $ref: '#/components/schemas/RiderTrackerList'
+                  depositBalance:
+                    $ref: '#/components/schemas/DepositBalance'
+                  checkpoints:
+                    $ref: '#/components/schemas/CheckpointList'
+                  events:
+                    $ref: '#/components/schemas/RiderEvents'
+                  notes:
+                    $ref: '#/components/schemas/notes'
     patch:
       operationId: tracker.webserver.patch_rider
       tags:
@@ -85,85 +142,169 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/PatchRider'
+              type: object
+              properties:
+                firstName:
+                  $ref: '#/components/schemas/FirstName'
+                lastName:
+                  $ref: '#/components/schemas/LastName'
+                email:
+                  $ref: '#/components/schemas/Email'
+                capNumber:
+                  $ref: '#/components/schemas/CapNumber'
+                category:
+                  $ref: '#/components/schemas/Category'
       responses:
         200:
           description: Updated information about rider
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/PostPatchRiderResponse'
-#  /riders/{rider_id}/trackers/{tracker_id}/addTrackerAssignment:
-#    post:
-#      parameters:
-#        - $ref: '#/components/parameters/RiderId'
-#      tags:
-#        - riders
-#        - trackers
-#      summary: Assign a tracker to a rider
-#      requestBody:
-#        required: True
-#        content:
-#          application/json:
-#            schema:
-#              $ref: '#/components/schemas/AssignTracker'
-#      responses:
-#        200:
-#          description: Rider object, showing all trackers assigned to rider
-#          content:
-#            application/json:
-#              schema:
-#                $ref: '#/components/schemas/Rider'
-#        # error tracker already assigned to someone else?
-#        #
-#  /riders/{rider_id}/trackers/{tracker_id}/removeTrackerAssignment:
-#    post:
-#      parameters:
-#        - $ref: '#/components/parameters/RiderId'
-#      tags:
-#        - riders
-#        - trackers
-#      summary: Remove a tracker from a rider
-#      requestBody:
-#        required: True
-#        content:
-#          application/json:
-#            schema:
-#              $ref: '#/components/schemas/RemoveTracker'
-#      responses:
-#        200:
-#          description: Rider object, showing all trackers assigned to rider
-#          content:
-#            application/json:
-#              schema:
-#                $ref: '#/components/schemas/Rider'
-        # error tracker not assigned to rider
-#  /riders/{rider_id}/trackers/{tracker_id}/addTrackerPossession:
-     # todo
-#  /riders/{rider_id}/trackers/{tracker_id}/removeTrackerPossession:
-#    # todo
-#  /riders/{rider_id}/{checkpoint_id}/assignArrival:
-#    post:
-#      parameters:
-#        - $ref: '#/components/parameters/RiderId'
-#        - $ref: '#/components/parameters/CheckpointID'
-#      tags:
-#        - riders
-#        - races
-#      summary: Assign arrival of a rider to a checkpoint
-#      requestBody:
-#        required: True
-#        content:
-#          application/json:
-#            schema:
-#              $ref: '#/components/schemas/CheckpointArrival'
-#      responses:
-#        200:
-#          description: Successfully assigned rider to checkpoint
-#          content:
-#            application/json:
-#              schema:
-#                $ref: '#/components/schemas/CheckpointList'
+                type: object
+                properties:
+                  id:
+                    $ref: '#/components/schemas/Id'
+                  firstName:
+                    $ref: '#/components/schemas/FirstName'
+                  lastName:
+                    $ref: '#/components/schemas/LastName'
+                  email:
+                    $ref: '#/components/schemas/Email'
+                  category:
+                    $ref: '#/components/schemas/Category'
+  /riders/{rider_id}/trackers/{tracker_id}/trackerAssignment:
+    post:
+      parameters:
+        - $ref: '#/components/parameters/RiderId'
+        - $ref: '#/components/parameters/TrackerId'
+      tags:
+        - riders
+        - trackers
+      summary: Assign a tracker to a rider
+      requestBody:
+        required: True
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                deposit:
+                  $ref: '#/components/schemas/DepositAmount'
+                notes:
+                  $ref: '#/components/schemas/notes'
+      responses:
+        200:
+          description: Rider object, showing all trackers assigned to rider
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RiderTrackers'
+        # error tracker already assigned to someone else?
+        #
+    delete:
+      parameters:
+        - $ref: '#/components/parameters/RiderId'
+        - $ref: '#/components/parameters/TrackerId'
+      tags:
+        - riders
+        - trackers
+      summary: Remove a tracker assignment from a rider
+      requestBody:
+        required: True
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                deposit:
+                  $ref: '#/components/schemas/DepositAmount'
+                workingStatus:
+                  $ref: '#/components/schemas/'
+                notes:
+                  $ref: '#/components/schemas/notes'
+      responses:
+        200:
+          description: Rider object, showing all trackers assigned to rider
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RiderTrackers'
+        # error tracker not assigned to rider?
+  /riders/{rider_id}/trackers/{tracker_id}/trackerPossession:
+    post:
+      parameters:
+        - $ref: '#/components/parameters/RiderId'
+        - $ref: '#/components/parameters/TrackerId'
+      tags:
+        - riders
+        - trackers
+      summary: Give rider possession of a tracker
+      requestBody:
+        required: False
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                notes:
+                  $ref: '#/components/schemas/notes'
+      responses:
+        200:
+          description: Rider object, showing all trackers assigned and possessed by rider
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RiderTrackers'
+        # error tracker already not assigned to rider?
+    delete:
+      parameters:
+        - $ref: '#/components/parameters/RiderId'
+        - $ref: '#/components/parameters/TrackerId'
+      tags:
+        - riders
+        - trackers
+      summary: Remove a tracker possession from a rider
+      requestBody:
+        required: True
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                newLocation:
+                  $ref: '#/components/schemas/location'
+                notes:
+                  $ref: '#/components/schemas/notes'
+      responses:
+        200:
+          description: Rider object, showing all trackers assigned to rider
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RiderTrackers'
+  /riders/{rider_id}/{checkpoint_id}/arrival:
+    post:
+      parameters:
+        - $ref: '#/components/parameters/RiderId'
+        - $ref: '#/components/parameters/CheckpointID'
+      tags:
+        - riders
+        - races
+      summary: Assign arrival of a rider to a checkpoint
+      requestBody:
+        required: false
+        description: Optional datetime, otherwise datetime calculated by server at request time
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/dateTime'
+      responses:
+        200:
+          description: Successfully assigned rider to checkpoint
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CheckpointList'
 #  /races/{checkpoint_id}:
 #    parameters:
 #      - $ref: '#/components/parameters/CheckpointID'
@@ -297,20 +438,6 @@ components:
     RiderId:
       type: integer
       description: Id number of rider
-    RemoveTracker:
-      type: object
-      properties:
-        trackerId:
-          $ref: '#/components/schemas/Id'
-        depositToBeReturned:
-          $ref: '#/components/schemas/DepositAmount'
-    AssignTracker:
-      type: object
-      properties:
-        trackerId:
-          $ref: '#/components/schemas/Id'
-        depositPaid:
-          $ref: '#/components/schemas/DepositAmount'
     Trackers:
       type: object
       properties:
@@ -339,6 +466,9 @@ components:
           $ref: '#/components/schemas/Owner'
         url:
           $ref: '#/components/schemas/trackerUrl'
+    notes:
+      type: string
+      description: Notes for an action
     Tracker:
       type: object
       properties:
@@ -375,8 +505,8 @@ components:
           $ref: '#/components/schemas/TrackerEventClassification'
         user:
           $ref: '#/components/schemas/EventUser'
-        timestamp:
-          $ref: '#/components/schemas/timestamp'
+        dateTime:
+          $ref: '#/components/schemas/dateTime'
         notes:
           $ref: '#/components/schemas/Notes'
     TrackerEventClassification:
@@ -521,7 +651,7 @@ components:
         user:
           $ref: '#/components/schemas/EventUser'
         timestamp:
-          $ref: '#/components/schemas/timestamp'
+          $ref: '#/components/schemas/dateTime'
         notes:
           $ref: '#/components/schemas/Notes'
     Notes:
@@ -555,7 +685,7 @@ components:
         checkPoint:
           $ref: '#/components/schemas/Checkpoint'
         time:
-          $ref: '#/components/schemas/timestamp'
+          $ref: '#/components/schemas/dateTime'
     CheckpointSeen:
       type: object
       properties:
@@ -566,13 +696,13 @@ components:
     Checkpoint:
       type: integer
       example: 1
-    dateTime:
+    RiderTrackers:
       type: object
       properties:
-        timestamp:
-          $ref: '#/components/schemas/timestamp'
-        timeReadable:
-          $ref: '#/components/schemas/timeReadable'
+        trackers:
+          $ref: '#/components/schemas/RiderTrackerList'
+        depositBalance:
+          $ref: '#/components/schemas/DepositAmount'
     RiderTrackerList:
       type: array
       items:
@@ -584,10 +714,17 @@ components:
           $ref: '#/components/schemas/ESNNumber'
         id:
           $ref: '#/components/schemas/Id'
-        depositAmount:
-          $ref: '#/components/schemas/DepositAmount'
         workingStatus:
           $ref: '#/components/schemas/WorkingStatus'
+        assigned:
+          $ref: '#/components/schemas/trackerBool'
+        possession:
+          $ref: '#/components/schemas/trackerBool'
+        dateAssigned:
+          $ref: '#/components/schemas/dateTime'
+    trackerBool:
+      type: boolean
+      description: Whether the rider is in possession or tracker is assigned to rider
     Id:
       type: integer
       description: Id number for various resources. Starting from 0, +1 iteration
@@ -600,7 +737,8 @@ components:
       type: number
       example: 200.4
     DepositAmount:
-      description: Money to be assigned to a tracker
+      description: Money. Either total balance, or amount to be added or removed
+        from a riders account
       type: number
       example: 200.4
     WorkingStatus:
@@ -609,10 +747,7 @@ components:
         - working
         - broken
         - unknown
-    timestamp:
-      type: integer
-      description: Unix Epoch timestamp
-    timeReadable:
+    dateTime:
       type: string
       format: date-time
       description: ISO Format Date Time string
