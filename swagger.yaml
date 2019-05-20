@@ -121,7 +121,22 @@ paths:
                   capNumber:
                     $ref: '#/components/schemas/CapNumber'
                   trackers:
-                    $ref: '#/components/schemas/RiderTrackerList'
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        esnNumber:
+                          $ref: '#/components/schemas/ESNNumber'
+                        id:
+                          $ref: '#/components/schemas/Id'
+                        workingStatus:
+                          $ref: '#/components/schemas/WorkingStatus'
+                        assigned:
+                          $ref: '#/components/schemas/trackerBool'
+                        possession:
+                          $ref: '#/components/schemas/trackerBool'
+                        dateAssigned:
+                          $ref: '#/components/schemas/dateTime'
                   depositBalance:
                     $ref: '#/components/schemas/DepositBalance'
                   checkpoints:
