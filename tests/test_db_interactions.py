@@ -1,21 +1,16 @@
 import os
 import shutil
-
-import sqlalchemy
 import sqlite3
 from datetime import datetime
 from tempfile import mkdtemp
 from unittest import TestCase, mock
+from unittest.mock import patch, Mock
 
+import sqlalchemy
 from sqlalchemy import create_engine
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import sessionmaker
 
-from tracker.models import (
-    Base,
-    Riders,
-    Trackers
-)
 from tracker.db_interactions import (
     create,
     get_or_create,
@@ -25,7 +20,11 @@ from tracker.db_interactions import (
     update,
     get_resources
 )
-from unittest.mock import patch, Mock
+from tracker.models import (
+    Base,
+    Riders,
+    Trackers
+)
 
 
 # todo add get tests
