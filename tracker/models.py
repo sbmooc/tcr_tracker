@@ -2,8 +2,16 @@ import enum
 import json
 from datetime import datetime
 
-from sqlalchemy import Column, Integer, String, DATETIME, \
-    ForeignKey, Float, Enum, DATE
+from sqlalchemy import (
+    Column,
+    Integer,
+    String,
+    DATETIME,
+    ForeignKey,
+    Float,
+    Enum,
+    DATE
+)
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import relationship, class_mapper, ColumnProperty
 
@@ -99,25 +107,24 @@ class Trackers(Base, BaseMixin):
     warranty_expiry = Column('warranty', DATE)
     owner = Column('owner', Enum(OwnerChoices))
     rider_assigned = Column('rider_assigned', ForeignKey('riders.id'))
+    # location = relationship('tracker_locations')
     # todo - how to show possession???
 
 
 class TrackerLocations(Base, BaseMixin):
 
-    __tablename__ = 'tracker_riders'
+    __tablename__ = 'tracker_locations'
     id = Column('id', Integer, primary_key=True)
     tracker = Column('tracker_id', ForeignKey('trackers.id'), nullable=False)
-    rider = Column('rider_id', ForeignKey('riders.id'))
-    location = Column('location_id', ForeignKey('tracker_locations.id'))
-    deposit_amount = Column('deposit_amount', Float)
-    deposit_status = Column('deposit_status', Enum(DepositStatus))
+    rider = Column('rider', ForeignKey('riders.id'))
+    # location = Column('location', ForeignKey('locations.id'))
 
 
 class Locations(Base, BaseMixin):
-    __tablename__ = 'tracker_locations'
+    __tablename__ = 'locations'
     id = Column('id', Integer, primary_key=True)
     location = Column(String, unique=True)
-    trackers = relationship('Trackers')
+    # trackers = relationship('Trackers')
 
 
 class Riders(Base, BaseMixin):
@@ -133,44 +140,51 @@ class Riders(Base, BaseMixin):
     category = Column('category', Enum(RiderCategories))
     notes = relationship('RiderNotes')
     events = relationship('RiderEvents')
+    balance = Column('balance', Float)
     # todo link riders who are in pairs? or does the capnumber do that???
     # todo add checkpoints stuff!
 
 
 class RiderNotes(Base, BaseMixin):
+    __tablename__ = 'rider_notes'
     id = Column('id', Integer, primary_key=True)
-    rider = Column(Integer, ForeignKey('rider.id'))
+    rider = Column(Integer, ForeignKey('riders.id'))
     datetime = Column('datetime', DATETIME)
-    user = Column(Integer, ForeignKey('user.id'))
+    user = Column(Integer, ForeignKey('users.id'))
+    event = Column(Integer, ForeignKey('rider_events.id'))
 
 
 class TrackerNotes(Base, BaseMixin):
+    __tablename__ = 'tracker_notes'
     id = Column('id', Integer, primary_key=True)
-    tracker = Column(Integer, ForeignKey('tracker.id'))
+    tracker = Column(Integer, ForeignKey('trackers.id'))
     datetime = Column('datetime', DATETIME)
-    user = Column(Integer, ForeignKey('user.id'))
+    user = Column(Integer, ForeignKey('users.id'))
+    event = Column(Integer, ForeignKey('tracker_events.id'))
 
 
 class RiderEvents(Base, BaseMixin):
     __tablename__ = 'rider_events'
     id = Column('id', Integer, primary_key=True)
-    user = relationship('Users')
+    user_id = Column(Integer, ForeignKey('users.id'))
     datetime = Column('datetime', DATETIME)
     event_type = Column('event_type', Enum(RiderEventCategories))
     notes = relationship('RiderNotes')
-    rider = Column(Integer, ForeignKey('rider.id'))
+    balance_change = Column('balance_change', Float)
+    rider = Column(Integer, ForeignKey('riders.id'))
 
 
 class TrackerEvents(Base, BaseMixin):
-    __tablename__ = 'rider_events'
+    __tablename__ = 'tracker_events'
     id = Column('id', Integer, primary_key=True)
-    user = relationship('Users')
+    user_id = Column(Integer, ForeignKey('users.id'))
     datetime = Column('datetime', DATETIME)
     event_type = Column('event_type', Enum(TrackerEventCategories))
     notes = relationship('TrackerNotes')
-    tracker = Column(Integer, ForeignKey('rider.id'))
+    tracker = Column(Integer, ForeignKey('riders.id'))
 
 
 class Users(Base, BaseMixin):
-    pass
+    __tablename__ = 'users'
+    id = Column('id', Integer, primary_key=True)
 

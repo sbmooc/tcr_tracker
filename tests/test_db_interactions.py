@@ -11,9 +11,20 @@ from sqlalchemy import create_engine
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import sessionmaker
 
-from tracker.models import Base, Riders, Trackers
-from tracker.db_interactions import create, get_or_create, get_and_delete, set_up_engine, session_scope, update, \
-    get_riders
+from tracker.models import (
+    Base,
+    Riders,
+    Trackers
+)
+from tracker.db_interactions import (
+    create,
+    get_or_create,
+    get_and_delete,
+    set_up_engine,
+    session_scope,
+    update,
+    get_resources
+)
 from unittest.mock import patch, Mock
 
 
@@ -166,7 +177,7 @@ class TestCRUD(DBTests):
         self.cur.execute('INSERT INTO riders VALUES (?, ?, ?, ?, ?, ?)', tuple(test_rider_2.values()))
         self.cur.execute('INSERT INTO riders VALUES (?, ?, ?, ?, ?, ?)', tuple(test_rider_3.values()))
         self.conn.commit()
-        result = get_riders(self.test_session, 1, 10)
+        result = get_resources(self.test_session, 1, 10)
         self.assertEqual(len(result[0]), 2)
         self.assertEqual(result[0][0].id, 1)
         self.assertEqual(result[0][1].id, 9)
@@ -174,7 +185,7 @@ class TestCRUD(DBTests):
 
     def test_get_list_Riders_emptyDB(self):
 
-        result = get_riders(self.test_session, 1, 10)
+        result = get_resources(self.test_session, 1, 10)
         self.assertEqual(result, ([], None))
 
     def test_create_wrong_category(self):

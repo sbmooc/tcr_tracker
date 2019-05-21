@@ -96,7 +96,7 @@ def get(session, model, **kwargs):
 # todo unit test this
 def get_resources(session, start, end, model):
     """
-    Returns a list of resources from start id for limit and return the id of the last rider in the db
+    Returns a list of resources from start id for limit and return the id of the last resource in the db
     :param session:
     :param start:
     :param end:
@@ -131,7 +131,6 @@ def get_and_delete(session, model, commit=True, **kwargs):
         return False
 
 
-# @audit
 def update(session, model, update_, commit=True, **kwargs):
     # todo docstring here
     n_rows_updated = session.query(model).filter_by(**kwargs).update(update_)
@@ -142,14 +141,3 @@ def update(session, model, update_, commit=True, **kwargs):
     else:
         return False
 
-# def audit(func):
-#     def wrapper(*args, **kwargs):
-#         data = args[1].as_dict()
-#         name = args[1].__tablename__
-#         audit_ = Audit(table=name,
-#                        data=data)
-#         args[0].add(audit_)
-#         return func(*args, **kwargs)
-#     return wrapper
-#
-#
