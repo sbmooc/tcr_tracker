@@ -19,7 +19,7 @@ class DateTimeEncoder(json.JSONEncoder):
 
 
 class BaseMixin(object):
-    # todo - add a comment here to work out why i do this!!
+    # todo this looks to be for serializing json and probably isn't needed.
     def as_dict(self):
         result = {}
         for prop in class_mapper(self.__class__).iterate_properties:
