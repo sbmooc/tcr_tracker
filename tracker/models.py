@@ -3,7 +3,7 @@ import json
 from datetime import datetime
 
 from sqlalchemy import Column, Integer, String, DATETIME, \
-    ForeignKey, Float, Enum, Boolean, JSON, DATE
+    ForeignKey, Float, Enum, DATE
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import relationship, class_mapper, ColumnProperty
 
@@ -68,6 +68,24 @@ class RiderCategories(enum.Enum):
     pair = 3
 
 
+class RiderEventCategories(enum.Enum):
+    payment_in = 1
+    payment_out = 2
+    start_race = 3
+    finish_race = 4
+    scratch = 5
+    arrive_checkpoint = 6
+
+
+class TrackerEventCategories(enum.Enum):
+    tested_OK = 1
+    tested_broken = 2
+    add_tracker_assignment = 3
+    remove_tracker_assignment = 4
+    add_tracker_possession = 5
+    remove_tracker_possession = 6
+
+
 class Trackers(Base, BaseMixin):
 
     __tablename__ = 'trackers'
@@ -80,8 +98,8 @@ class Trackers(Base, BaseMixin):
     purchase_date = Column('purchase', DATE)
     warranty_expiry = Column('warranty', DATE)
     owner = Column('owner', Enum(OwnerChoices))
-    rider = Column('rider', ForeignKey('riders.id'))
-    location_id = Column('location_id', ForeignKey('tracker_locations.id'))
+    rider_assigned = Column('rider_assigned', ForeignKey('riders.id'))
+    # todo - how to show possession???
 
 
 class TrackerLocations(Base, BaseMixin):
@@ -110,19 +128,49 @@ class Riders(Base, BaseMixin):
     last_name = Column('last_name', String)
     email = Column('email', String)
     cap_number = Column('cap_number', String)
-    trackers = relationship('Trackers')
+    trackers_assigned = relationship('Trackers')
+    trackers_possession = relationship('Trackers')
     category = Column('category', Enum(RiderCategories))
+    notes = relationship('RiderNotes')
+    events = relationship('RiderEvents')
     # todo link riders who are in pairs? or does the capnumber do that???
     # todo add checkpoints stuff!
 
 
-class Audit(Base):
+class RiderNotes(Base, BaseMixin):
+    id = Column('id', Integer, primary_key=True)
+    rider = Column(Integer, ForeignKey('rider.id'))
+    datetime = Column('datetime', DATETIME)
+    user = Column(Integer, ForeignKey('user.id'))
 
-    __tablename__ = 'audit_table'
-    id = Column(Integer, primary_key=True, autoincrement=True)
-    table = Column('table_name', String)
-    # table_id = Column('table_id', Integer)
-    data = Column('data', JSON)
-    delete_ = Column('delete', Boolean)
-    # todo when user table is implemented, ensure it is recorded here
-    # user
+
+class TrackerNotes(Base, BaseMixin):
+    id = Column('id', Integer, primary_key=True)
+    tracker = Column(Integer, ForeignKey('tracker.id'))
+    datetime = Column('datetime', DATETIME)
+    user = Column(Integer, ForeignKey('user.id'))
+
+
+class RiderEvents(Base, BaseMixin):
+    __tablename__ = 'rider_events'
+    id = Column('id', Integer, primary_key=True)
+    user = relationship('Users')
+    datetime = Column('datetime', DATETIME)
+    event_type = Column('event_type', Enum(RiderEventCategories))
+    notes = relationship('RiderNotes')
+    rider = Column(Integer, ForeignKey('rider.id'))
+
+
+class TrackerEvents(Base, BaseMixin):
+    __tablename__ = 'rider_events'
+    id = Column('id', Integer, primary_key=True)
+    user = relationship('Users')
+    datetime = Column('datetime', DATETIME)
+    event_type = Column('event_type', Enum(TrackerEventCategories))
+    notes = relationship('TrackerNotes')
+    tracker = Column(Integer, ForeignKey('rider.id'))
+
+
+class Users(Base, BaseMixin):
+    pass
+
