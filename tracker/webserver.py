@@ -1,12 +1,15 @@
 #!/usr/bin/env python
+import connexion
 from flask import request, json, Flask
 
 from tracker import db_interactions as db
 from tracker.models import Riders, Trackers
 from tracker import serializer as sl
 
-app = Flask(__name__)
-
+# app = Flask(__name__)
+app = connexion.App(__name__)
+# app.add_api('swagger.yaml')
+# app.run(port=8080)
 
 @app.route('/riders', methods=['POST'])
 def post_riders():

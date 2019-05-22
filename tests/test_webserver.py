@@ -1,20 +1,23 @@
 from datetime import datetime
 from unittest import TestCase, mock
 from unittest.mock import mock_open
-
+import connexion
 from tracker.models import Riders, Trackers
 from tracker.webserver import app
 
+# todo - set up test client with connexion
+# todo - ensure where no relationship, key returns None or empty list
 
 class WebTests(TestCase):
 
     def setUp(self):
-        self.test_client = app.test_client()
+
+        self.test_client = app.app.test_client()
         self.mock_riders = [
             Riders(id=1, first_name='Bob', last_name='Green', cap_number='100', email='hello@email.com',
-                   category='male', trackers=[]),
+                   category='male', trackers_assigned=[]),
             Riders(id=2, first_name='Lyle', last_name='Taylor', cap_number='105', email='hello@email.com',
-                   category='male', trackers=[]),
+                   category='male', trackers_assigned=[]),
         ]
         self.mock_trackers = [
             Trackers(id=1, esn_number='123', working_status='working', loan_status='with_rider',
@@ -43,10 +46,12 @@ class TestRiderEndpoints(WebTests):
             "capNumber": '171',
             'category': 'male',
         }
-        self.test_client.post('/riders', json=rider_details)
+        self.test_client.post(
+            '/riders',
+            json=rider_details
+        )
         mock_create.assert_called_with(mock.ANY, mock_riders, **rider_details)
 
-    # todo this should get caught in validation tests
     def test_post_rider_error(self):
         rider_details = {
             "nonsense": 'Bob',
