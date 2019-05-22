@@ -100,13 +100,15 @@ class Trackers(Base, BaseMixin):
     id = Column('id', Integer, primary_key=True)
     esn_number = Column('esn_number', String)
     working_status = Column('current_status',
-                            Enum(WorkingStatus))
+                            Enum(WorkingStatus,
+                                 validate_strings=True))
     loan_status = Column('loan_status', Enum(LoanStatus))
     last_test_date = Column('last_test', DATE)
     purchase_date = Column('purchase', DATE)
     warranty_expiry = Column('warranty', DATE)
     owner = Column('owner', Enum(OwnerChoices))
     rider_assigned = Column('rider_assigned', ForeignKey('riders.id'))
+    # rider_possess = Column('rider_possess', ForeignKey('riders.id'))
     # location = relationship('tracker_locations')
     # todo - how to show possession???
 
@@ -136,8 +138,8 @@ class Riders(Base, BaseMixin):
     email = Column('email', String)
     cap_number = Column('cap_number', String)
     trackers_assigned = relationship('Trackers')
-    trackers_possession = relationship('Trackers')
-    category = Column('category', Enum(RiderCategories))
+    # trackers_possession = relationship('Trackers', back_populates='rider_possess')
+    category = Column('category', Enum(RiderCategories, validate_strings=True))
     notes = relationship('RiderNotes')
     events = relationship('RiderEvents')
     balance = Column('balance', Float)
@@ -150,6 +152,7 @@ class RiderNotes(Base, BaseMixin):
     id = Column('id', Integer, primary_key=True)
     rider = Column(Integer, ForeignKey('riders.id'))
     datetime = Column('datetime', DATETIME)
+    notes = Column('notes', String)
     user = Column(Integer, ForeignKey('users.id'))
     event = Column(Integer, ForeignKey('rider_events.id'))
 

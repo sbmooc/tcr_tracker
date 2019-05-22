@@ -18,13 +18,13 @@ from tracker.db_interactions import (
     set_up_engine,
     session_scope,
     update,
-    get_resources
-)
+    get_resources,
+    get)
 from tracker.models import (
     Base,
     Riders,
-    Trackers
-)
+    Trackers,
+    RiderNotes)
 
 
 # todo add get tests
@@ -106,12 +106,73 @@ class TestCRUD(DBTests):
             'last_name': 'Hill',
             'email': 'hello@bob.com',
             'cap_number': 100,
-            'category': 'male'
+            'category': 'male',
+            'balance': 100
         }
-        create(self.test_session, Riders, **data_to_add)
+        create(
+            self.test_session,
+            Riders,
+            **data_to_add
+        )
         data_in_riders = self.cur.execute('SELECT * FROM RIDERS;').fetchall()[0]
-        expected_results_riders = (1, 'Bobby', 'Hill', 'hello@bob.com', '100', 'male')
+        expected_results_riders = (
+            1,
+            'Bobby',
+            'Hill',
+            'hello@bob.com',
+            '100',
+            'male',
+            100
+        )
         self.assertEqual(data_in_riders, expected_results_riders)
+
+    def test_one_to_many_relationship(self):
+        rider = {
+            'id': 1,
+            'first_name': 'Bobby',
+            'last_name': 'Hill',
+            'email': 'hello@bob.com',
+            'cap_number': 100,
+            'category': 'male',
+            'balance': 100
+        }
+        create(
+            self.test_session,
+            Riders,
+            **rider
+        )
+        rider_notes_1 = {
+            'id': 1,
+            'rider': 1,
+            'datetime': datetime(2018, 1, 1),
+            'notes': 'Good ride'
+        }
+        rider_notes_2 = {
+            'id': 2,
+            'rider': 1,
+            'datetime': datetime(2018, 1, 2),
+            'notes': 'Nice rider'
+        }
+        create(
+            self.test_session,
+            RiderNotes,
+            **rider_notes_1
+        )
+        create(
+            self.test_session,
+            RiderNotes,
+            **rider_notes_2
+        )
+
+        test = get(
+            self.test_session,
+            Riders,
+            **{
+                'id': 1
+            }
+        )
+        self.assertEqual(test[0].notes[0].notes, 'Good ride')
+        self.assertEqual(test[0].notes[1].notes, 'Nice rider')
 
     def test_get_or_create_creating(self):
         data_to_get = {
@@ -120,11 +181,12 @@ class TestCRUD(DBTests):
             'last_name': 'Hill',
             'email': 'hello@bob.com',
             'cap_number': 100,
-            'category': 'male'
+            'category': 'male',
+            'balance': 100
         }
         test_get = get_or_create(self.test_session, Riders, **data_to_get)
         data_in_riders = self.cur.execute('SELECT * FROM RIDERS;').fetchall()[0]
-        expected_results_riders = (1, 'Bobby', 'Hill', 'hello@bob.com', '100', 'male')
+        expected_results_riders = (1, 'Bobby', 'Hill', 'hello@bob.com', '100', 'male', 100)
         self.assertEqual(data_in_riders, expected_results_riders)
         self.assertEqual(1, test_get[0].id)
         self.assertTrue(test_get[1])
@@ -136,10 +198,11 @@ class TestCRUD(DBTests):
             'last_name': 'Hill',
             'email': 'hello@bob.com',
             'cap_number': 100,
-            'category': 'male'
+            'category': 'male',
+            'balance': 100
         }
         params = tuple(test_data.values())
-        query = "INSERT INTO riders VALUES (?,?,?,?,?,?)"
+        query = "INSERT INTO riders VALUES (?, ?,?,?,?,?,?)"
         self.cur.execute(query, params)
         self.conn.commit()
         test_get = get_or_create(self.test_session, Riders, **test_data)
@@ -154,7 +217,8 @@ class TestCRUD(DBTests):
             'last_name': 'Hill',
             'email': 'hello@bob.com',
             'cap_number': 100,
-            'category': 'male'
+            'category': 'male',
+            'balance': 100
         }
         test_rider_2 = {
             'id': 9,
@@ -162,7 +226,8 @@ class TestCRUD(DBTests):
             'last_name': 'Hill',
             'email': 'hello@bob.com',
             'cap_number': 100,
-            'category': 'male'
+            'category': 'male',
+            'balance': 100
         }
         test_rider_3 = {
             'id': 15,
@@ -170,13 +235,14 @@ class TestCRUD(DBTests):
             'last_name': 'Hill',
             'email': 'hello@bob.com',
             'cap_number': 100,
-            'category': 'male'
+            'category': 'male',
+            'balance': 100
         }
-        self.cur.execute('INSERT INTO riders VALUES (?, ?, ?, ?, ?, ?)', tuple(test_rider_1.values()))
-        self.cur.execute('INSERT INTO riders VALUES (?, ?, ?, ?, ?, ?)', tuple(test_rider_2.values()))
-        self.cur.execute('INSERT INTO riders VALUES (?, ?, ?, ?, ?, ?)', tuple(test_rider_3.values()))
+        self.cur.execute('INSERT INTO riders VALUES (?, ?, ?, ?, ?, ?, ?)', tuple(test_rider_1.values()))
+        self.cur.execute('INSERT INTO riders VALUES (?, ?, ?, ?, ?, ?, ?)', tuple(test_rider_2.values()))
+        self.cur.execute('INSERT INTO riders VALUES (?, ?, ?, ?, ?, ?, ?)', tuple(test_rider_3.values()))
         self.conn.commit()
-        result = get_resources(self.test_session, 1, 10)
+        result = get_resources(self.test_session, 1, 10, Riders)
         self.assertEqual(len(result[0]), 2)
         self.assertEqual(result[0][0].id, 1)
         self.assertEqual(result[0][1].id, 9)
@@ -184,7 +250,7 @@ class TestCRUD(DBTests):
 
     def test_get_list_Riders_emptyDB(self):
 
-        result = get_resources(self.test_session, 1, 10)
+        result = get_resources(self.test_session, 1, 10, Riders)
         self.assertEqual(result, ([], None))
 
     def test_create_wrong_category(self):
@@ -192,7 +258,7 @@ class TestCRUD(DBTests):
             'id': 1,
             'category': 'nonsense'
         }
-        with self.assertRaises(IntegrityError):
+        with self.assertRaises(sqlalchemy.exc.StatementError):
             create(self.test_session, Riders, **data_to_add)
 
     def test_get_and_delete(self):
@@ -205,11 +271,10 @@ class TestCRUD(DBTests):
             'purchase': datetime(2015, 1, 2),
             'warranty_expiry': datetime(2019, 1, 2),
             'owner': 'lost_dot',
-            'rider_id': 1,
-            'location_id': 1,
+            'rider_assigned': 1,
         }
 
-        self.cur.execute('INSERT INTO trackers VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)', tuple(tracker.values()))
+        self.cur.execute('INSERT INTO trackers VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)', tuple(tracker.values()))
         self.conn.commit()
         get_and_delete(self.test_session, Trackers, **{'id': 123456})
         self.assertEqual(self.cur.execute('SELECT * FROM trackers').fetchall(), [])
@@ -227,8 +292,7 @@ class TestCRUD(DBTests):
             'purchase': datetime(2015, 1, 2),
             'warranty_expiry': datetime(2019, 1, 2),
             'owner': 'lost_dot',
-            'rider_id': 1,
-            'location_id': 1,
+            'rider': 1,
         }
         tracker_2 = {
             'id': 123457,
@@ -239,8 +303,7 @@ class TestCRUD(DBTests):
             'purchase': datetime(2015, 1, 2),
             'warranty_expiry': datetime(2019, 1, 2),
             'owner': 'lost_dot',
-            'rider_id': 1,
-            'location_id': 1,
+            'rider': 1,
         }
         tracker_3 = {
             'id': 123458,
@@ -251,12 +314,11 @@ class TestCRUD(DBTests):
             'purchase': datetime(2015, 1, 2),
             'warranty_expiry': datetime(2019, 1, 2),
             'owner': 'lost_dot',
-            'rider_id': 1,
-            'location_id': 1,
+            'rider': 1,
         }
-        self.cur.execute('INSERT INTO trackers VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)', tuple(tracker_1.values()))
-        self.cur.execute('INSERT INTO trackers VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)', tuple(tracker_2.values()))
-        self.cur.execute('INSERT INTO trackers VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)', tuple(tracker_3.values()))
+        self.cur.execute('INSERT INTO trackers VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)', tuple(tracker_1.values()))
+        self.cur.execute('INSERT INTO trackers VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)', tuple(tracker_2.values()))
+        self.cur.execute('INSERT INTO trackers VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)', tuple(tracker_3.values()))
         self.conn.commit()
         get_and_delete(self.test_session, Trackers, commit=False, **{'id': 123456})
         get_and_delete(self.test_session, Trackers, commit=False, **{'id': 123457})
@@ -285,10 +347,9 @@ class TestCRUD(DBTests):
             'purchase': datetime(2015, 1, 2),
             'warranty_expiry': datetime(2019, 1, 2),
             'owner': 'lost_dot',
-            'rider_id': 1,
-            'location_id': 1,
+            'rider_assigned': 1,
         }
-        self.cur.execute('INSERT INTO trackers VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)', tuple(tracker_1.values()))
+        self.cur.execute('INSERT INTO trackers VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)', tuple(tracker_1.values()))
         self.conn.commit()
         filter_ = {'id': 123456}
         updates = {'owner': 'third_party'}
@@ -296,13 +357,12 @@ class TestCRUD(DBTests):
         result = self.cur.execute('SELECT * FROM trackers').fetchall()
         self.assertEqual(result[0], (123456, '123456', 'working',  'not_loaned', '2017-01-01 00:00:00',
                                      '2015-01-02 00:00:00', '2019-01-02 00:00:00',
-                                     'third_party', 1, 1))
+                                     'third_party', 1))
 
     def test_no_update_on_no_data(self):
         # nothing in db
         filter_ = {'id': 123456}
-        updates = {'owner': 'third_party',
-                   'third_party_name': 'TAW'}
+        updates = {'owner': 'third_party'}
         self.assertFalse(update(self.test_session, Trackers, updates, **filter_))
 
     def test_multiple_update(self):
@@ -315,8 +375,7 @@ class TestCRUD(DBTests):
             'purchase': datetime(2015, 1, 2),
             'warranty_expiry': datetime(2019, 1, 2),
             'owner': 'lost_dot',
-            'rider_id': 1,
-            'location_id': 1,
+            'rider_assigned': 1,
         }
         tracker_2 = {
             'id': 123457,
@@ -327,11 +386,10 @@ class TestCRUD(DBTests):
             'purchase': datetime(2015, 1, 2),
             'warranty_expiry': datetime(2019, 1, 2),
             'owner': 'lost_dot',
-            'rider_id': 1,
-            'location_id': 1,
+            'rider_assigned': 1,
         }
-        self.cur.execute('INSERT INTO trackers VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)', tuple(tracker_1.values()))
-        self.cur.execute('INSERT INTO trackers VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)', tuple(tracker_2.values()))
+        self.cur.execute('INSERT INTO trackers VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)', tuple(tracker_1.values()))
+        self.cur.execute('INSERT INTO trackers VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)', tuple(tracker_2.values()))
         self.conn.commit()
         filter_ = {'loan_status': 'not_loaned'}
         updates = {'loan_status': 'with_rider'}
@@ -339,10 +397,10 @@ class TestCRUD(DBTests):
         result = self.cur.execute('SELECT * FROM trackers').fetchall()
         self.assertEqual(result[0], (123456, '123456', 'working',  'with_rider', '2017-01-01 00:00:00',
                                      '2015-01-02 00:00:00', '2019-01-02 00:00:00',
-                                     'lost_dot', 1, 1))
+                                     'lost_dot', 1))
         self.assertEqual(result[1], (123457, '123456', 'working',  'with_rider', '2017-01-01 00:00:00',
                                      '2015-01-02 00:00:00', '2019-01-02 00:00:00',
-                                     'lost_dot', 1, 1))
+                                     'lost_dot', 1))
 
 
 class TestCRUDUsingContextMgr(DBTests):
