@@ -15,8 +15,7 @@ from sqlalchemy import (
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import relationship, class_mapper, ColumnProperty
 
-Base = declarative_base()
-
+from tracker.db_interactions import Base
 
 class DateTimeEncoder(json.JSONEncoder):
 
@@ -179,7 +178,7 @@ class RiderEvents(Base, BaseMixin):
 
 class TrackerEvents(Base, BaseMixin):
     __tablename__ = 'tracker_events'
-    id = Column('id', Integer, primary_key=True)
+    id = Column('id', Integer, primary_key=True, autoincrement=True)
     user_id = Column(Integer, ForeignKey('users.id'))
     datetime = Column('datetime', DATETIME)
     event_type = Column('event_type', Enum(TrackerEventCategories))

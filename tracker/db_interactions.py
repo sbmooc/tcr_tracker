@@ -5,11 +5,10 @@ from contextlib import contextmanager
 
 from sqlalchemy import create_engine
 from sqlalchemy.exc import IntegrityError
+from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import Session
-import os
 
-# from tracker.models import Audit
-from tracker.models import Riders
+Base = declarative_base()
 
 
 def set_up_engine():
@@ -18,7 +17,7 @@ def set_up_engine():
 
     :return:
     """
-    db_type = 'sqlite://'
+    db_type = 'sqlite:///'
     db_uri = '/home/oli/test_ting'
     if db_type is not None and db_uri is not None:
         engine_ = create_engine(db_type + db_uri)
@@ -31,6 +30,7 @@ def set_up_engine():
 def session_scope(commit=True):
     """Provide a transactional scope around a series of operations."""
     engine = set_up_engine()
+    Base.metadata.create_all(engine)
     session = Session(bind=engine)
     if commit:
         try:
@@ -62,6 +62,8 @@ def create_(session, instance, commit=True):
             return instance
         except IntegrityError:
             return False
+    else:
+        return instance
 
 
 def create(session, model, commit=True, **kwargs):

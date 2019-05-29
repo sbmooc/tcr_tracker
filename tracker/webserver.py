@@ -5,7 +5,7 @@ import connexion
 from flask import request, json, Flask
 
 from tracker import db_interactions as db
-from tracker.models import Riders, Trackers, TrackerEvents, TrackerNotes
+from tracker.models import Riders, Trackers, TrackerEvents, TrackerNotes, RiderEvents, RiderNotes
 from tracker import serializers as sl
 
 app = Flask(__name__)
@@ -128,25 +128,64 @@ def patch_tracker(id):
 @app.route('/riders/<int:rider_id>/trackers/<int:tracker_id>/addTrackerAssignment',
            methods=['POST'])
 def tracker_assignment_add(rider_id, tracker_id):
-    # update event
-    # update notes
-    # update rider
     now = datetime.now()
-    tracker_event = {
-        'user_id': None,
-        'datetime': now,
-        'event_type': 'add_tracker_assignment',
-        'tracker': tracker_id
-    }
+    request_payload = request.get_json()
     with db.session_scope() as session:
-        created_event = db.create(session, TrackerEvents, **tracker_event)
-        tracker_notes = {
-            'tracker': tracker_id,
-            'datetime': now,
-            'user': None,
-            'event': created_event.id
-        }
-        test = db.create(session, TrackerNotes, **tracker_notes)
+        db.update(
+            session,
+            Trackers,
+            {
+                'rider_assigned': None
+            },
+            **{
+                'id': tracker_id,
+            },
+            commit=False
+        )
+        created_tracker_event = db.create_(
+            session,
+            TrackerEvents(
+                user_id=None,
+                datetime=now,
+                event_type='add_tracker_assignment',
+                tracker=tracker_id
+            ),
+            commit=False
+        )
+        session.flush()
+        db.create_(
+            session,
+            TrackerNotes(
+                tracker=tracker_id,
+                datetime=now,
+                user=None,
+                event=created_tracker_event.id
+            ),
+            commit=False
+        )
+        created_rider_event = db.create_(
+            session,
+            RiderEvents(
+                user_id=None,
+                datetime=now,
+                event_type='payment_out',
+                balance_change=request_payload['depositAmount'],
+                rider=rider_id
+            ),
+            commit=False
+        )
+        db.create_(
+            session,
+            RiderNotes(
+                rider=rider_id,
+                datetime=now,
+                notes=request_payload['notes'],
+                user=None,
+                event=created_rider_event.id
+            ),
+            commit=False
+        )
+        session.commit()
 
 @app.route('/riders/<int:rider_id>/trackers/<int:tracker_id>/removeTrackerAssignment',
            methods=['POST'])
