@@ -1,15 +1,15 @@
 #!/usr/bin/env python
+from datetime import datetime
+
 import connexion
 from flask import request, json, Flask
 
 from tracker import db_interactions as db
-from tracker.models import Riders, Trackers
-from tracker import serializer as sl
+from tracker.models import Riders, Trackers, TrackerEvents, TrackerNotes
+from tracker import serializers as sl
 
-# app = Flask(__name__)
-app = connexion.App(__name__)
-# app.add_api('swagger.yaml')
-# app.run(port=8080)
+app = Flask(__name__)
+
 
 @app.route('/riders', methods=['POST'])
 def post_riders():
@@ -125,14 +125,32 @@ def patch_tracker(id):
         else:
             return app.response_class(status=204)
 
-@app.route('/riders/<int:rider_id>/trackers/<int:tracker_id>/trackerAssignment',
+@app.route('/riders/<int:rider_id>/trackers/<int:tracker_id>/addTrackerAssignment',
            methods=['POST'])
-def tracker_assignment_post(rider_id, tracker_id):
-    pass
+def tracker_assignment_add(rider_id, tracker_id):
+    # update event
+    # update notes
+    # update rider
+    now = datetime.now()
+    tracker_event = {
+        'user_id': None,
+        'datetime': now,
+        'event_type': 'add_tracker_assignment',
+        'tracker': tracker_id
+    }
+    with db.session_scope() as session:
+        created_event = db.create(session, TrackerEvents, **tracker_event)
+        tracker_notes = {
+            'tracker': tracker_id,
+            'datetime': now,
+            'user': None,
+            'event': created_event.id
+        }
+        test = db.create(session, TrackerNotes, **tracker_notes)
 
-@app.route('/riders/<int:rider_id>/trackers/<int:tracker_id>/trackerAssignment',
-           methods=['DELETE'])
-def tracker_assignment_delete(rider_id, tracker_id):
+@app.route('/riders/<int:rider_id>/trackers/<int:tracker_id>/removeTrackerAssignment',
+           methods=['POST'])
+def tracker_assignment_remove(rider_id, tracker_id):
     pass
 
 @app.route('/riders/<int:rider_id>/trackers/<int:tracker_id>/trackerPossession',

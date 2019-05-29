@@ -8,21 +8,40 @@ from tracker.webserver import app
 # todo - set up test client with connexion
 # todo - ensure where no relationship, key returns None or empty list
 
+
 class WebTests(TestCase):
 
     def setUp(self):
 
-        self.test_client = app.app.test_client()
+        self.test_client = app.test_client()
         self.mock_riders = [
-            Riders(id=1, first_name='Bob', last_name='Green', cap_number='100', email='hello@email.com',
-                   category='male', trackers_assigned=[]),
-            Riders(id=2, first_name='Lyle', last_name='Taylor', cap_number='105', email='hello@email.com',
-                   category='male', trackers_assigned=[]),
+            Riders(
+                id=1,
+                first_name='Bob',
+                last_name='Green',
+                cap_number='100',
+                email='hello@email.com',
+                category='male'
+            ),
+            Riders(
+                id=2,
+                first_name='Lyle',
+                last_name='Taylor',
+                cap_number='105',
+                email='hello@email.com',
+                category='male'
+            ),
         ]
         self.mock_trackers = [
-            Trackers(id=1, esn_number='123', working_status='working', loan_status='with_rider',
-                     last_test_date=datetime(2018, 1, 1), purchase_date=datetime(2018, 1, 1),
-                     warranty_expiry=datetime(2018, 1, 1), owner='lost_dot'),
+            Trackers(
+                id=1,
+                esn_number='123',
+                working_status='working',
+                loan_status='with_rider',
+                last_test_date=datetime(2018, 1, 1),
+                purchase_date=datetime(2018, 1, 1),
+                warranty_expiry=datetime(2018, 1, 1),
+                owner='lost_dot'),
             Trackers(id=2, esn_number='456', working_status='working', loan_status='with_rider',
                      last_test_date=datetime(2018, 1, 1), purchase_date=datetime(2018, 1, 1),
                      warranty_expiry=datetime(2018, 1, 1), owner='lost_dot'),
@@ -52,16 +71,17 @@ class TestRiderEndpoints(WebTests):
         )
         mock_create.assert_called_with(mock.ANY, mock_riders, **rider_details)
 
-    def test_post_rider_error(self):
-        rider_details = {
-            "nonsense": 'Bob',
-            "lastName": "Green",
-            "email": "hello@email.com",
-            "capNumber": '171',
-            'category': 'male',
-        }
-        response = self.test_client.post('/riders', json=rider_details)
-        self.assertEqual(response.status_code, 400)
+    # # todo test this with validation tests
+    # def test_post_rider_error(self):
+    #     rider_details = {
+    #         "nonsense": 'Bob',
+    #         "lastName": "Green",
+    #         "email": "hello@email.com",
+    #         "capNumber": '171',
+    #         'category': 'male',
+    #     }
+    #     response = self.test_client.post('/riders', json=rider_details)
+    #     self.assertEqual(response.status_code, 400)
 
     @mock.patch('tracker.webserver.db.get_resources')
     def test_get_riders_simple(self, mock_get_riders):
@@ -74,26 +94,30 @@ class TestRiderEndpoints(WebTests):
         self.assertEqual(result.status_code, 200)
         expected_result = [
             {
-              "capNumber": "100",
-              "firstName": "Bob",
-              "lastName": "Green",
-              "id": 1,
-              "trackers": [],
-              "category": "male",
-              "email": "hello@email.com"
+                "capNumber": "100",
+                "firstName": "Bob",
+                "lastName": "Green",
+                "id": 1,
+                "trackers_assigned": [],
+                "category": "male",
+                "email": "hello@email.com",
+                "notes": [],
+                "events": []
             },
             {
-              "capNumber": "105",
-              "firstName": "Lyle",
-              "lastName": "Taylor",
-              "id": 2,
-              "trackers": [],
-              "category": "male",
-              "email": "hello@email.com"
-
+                "capNumber": "105",
+                "firstName": "Lyle",
+                "lastName": "Taylor",
+                "id": 2,
+                "trackers_assigned": [],
+                "category": "male",
+                "email": "hello@email.com",
+                "notes": [],
+                "events": []
             }
         ]
-        self.assertEqual(result.json, expected_result)
+        self.assertDictEqual(result.json[0], expected_result[0])
+        self.assertDictEqual(result.json[1], expected_result[1])
 
     @mock.patch('tracker.webserver.db.get_resources')
     def test_get_riders_no_data(self, mock_get_riders):
@@ -117,13 +141,17 @@ class TestRiderEndpoints(WebTests):
         result = self.test_client.get('/riders/1')
         mock_get.assert_called_with(mock.ANY, Riders, **{'id': 1})
         self.assertEqual(result.status_code, 200)
-        expected_result = {"capNumber": "100",
-                          "firstName": "Bob",
-                          "lastName": "Green",
-                          "id": 1,
-                          "trackers": [],
-                          "category": "male",
-                          "email": "hello@email.com"}
+        expected_result = {
+            "capNumber": "100",
+            "firstName": "Bob",
+            "lastName": "Green",
+            "id": 1,
+            "trackers_assigned": [],
+            "category": "male",
+            "email": "hello@email.com",
+            "notes": [],
+            "events": []
+        }
         self.assertEqual(result.json,
                          expected_result)
 
@@ -134,7 +162,6 @@ class TestRiderEndpoints(WebTests):
         mock_get.assert_called_with(mock.ANY, Riders, **{'id': 1})
         self.assertEqual(result.status_code, 204)
 
-    #todo replace mocks here
     @mock.patch('tracker.webserver.db.update')
     def test_patch_rider(self, mock_update):
         mock_update.return_value = 'mock_rider'
@@ -150,8 +177,6 @@ class TestRiderEndpoints(WebTests):
         result = self.test_client.patch('/riders/1', json={'capNumber': '100'})
         mock_update.assert_called_with(mock.ANY, Riders, {'capNumber': '100'}, id=1)
         self.assertEqual(result.status_code, 204)
-
-    # todo mock out the validation in these tests and test separately
 
     @mock.patch('tracker.webserver.db.create')
     @mock.patch('tracker.webserver.Trackers')

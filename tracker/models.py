@@ -184,7 +184,7 @@ class TrackerEvents(Base, BaseMixin):
     datetime = Column('datetime', DATETIME)
     event_type = Column('event_type', Enum(TrackerEventCategories))
     notes = relationship('TrackerNotes')
-    tracker = Column(Integer, ForeignKey('riders.id'))
+    tracker = Column(Integer, ForeignKey('trackers.id'))
 
 
 class Users(Base, BaseMixin):

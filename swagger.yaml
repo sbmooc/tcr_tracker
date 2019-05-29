@@ -210,8 +210,9 @@ paths:
                     $ref: '#/components/schemas/Email'
                   category:
                     $ref: '#/components/schemas/Category'
-  /riders/{rider_id}/trackers/{tracker_id}/trackerAssignment:
+  /riders/{rider_id}/trackers/{tracker_id}/addTrackerAssignment:
     post:
+      operationId: tracker.webserver.tracker_assignment_add
       parameters:
         - $ref: '#/components/parameters/RiderId'
         - $ref: '#/components/parameters/TrackerId'
@@ -239,37 +240,39 @@ paths:
                 $ref: '#/components/schemas/RiderTrackers'
         # error tracker already assigned to someone else?
         #
-    delete:
-      parameters:
-        - $ref: '#/components/parameters/RiderId'
-        - $ref: '#/components/parameters/TrackerId'
-      tags:
-        - riders
-        - trackers
-      summary: Remove a tracker assignment from a rider
-      requestBody:
-        required: True
-        content:
-          application/json:
-            schema:
-              type: object
-              properties:
-                deposit:
-                  $ref: '#/components/schemas/DepositAmount'
-                workingStatus:
-                  $ref: '#/components/schemas/'
-                notes:
-                  $ref: '#/components/schemas/notes'
-      responses:
-        200:
-          description: Rider object, showing all trackers assigned to rider
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/RiderTrackers'
+#  /riders/{rider_id}/trackers/{tracker_id}/removeTrackerAssignment:
+#    post:
+#      parameters:
+#        - $ref: '#/components/parameters/RiderId'
+#        - $ref: '#/components/parameters/TrackerId'
+#      tags:
+#        - riders
+#        - trackers
+#      summary: Remove a tracker assignment from a rider
+#      requestBody:
+#        required: True
+#        content:
+#          application/json:
+#            schema:
+#              type: object
+#              properties:
+#                deposit:
+#                  $ref: '#/components/schemas/DepositAmount'
+#                workingStatus:
+#                  $ref: '#/components/schemas/'
+#                notes:
+#                  $ref: '#/components/schemas/notes'
+#      responses:
+#        200:
+#          description: Rider object, showing all trackers assigned to rider
+#          content:
+#            application/json:
+#              schema:
+#                $ref: '#/components/schemas/RiderTrackers'
         # error tracker not assigned to rider?
   /riders/{rider_id}/trackers/{tracker_id}/trackerPossession:
     post:
+      operationId: tracker.webserver.tracker_possession_post
       parameters:
         - $ref: '#/components/parameters/RiderId'
         - $ref: '#/components/parameters/TrackerId'
@@ -294,55 +297,55 @@ paths:
               schema:
                 $ref: '#/components/schemas/RiderTrackers'
         # error tracker already not assigned to rider?
-    delete:
-      parameters:
-        - $ref: '#/components/parameters/RiderId'
-        - $ref: '#/components/parameters/TrackerId'
-      tags:
-        - riders
-        - trackers
-      summary: Remove a tracker possession from a rider
-      requestBody:
-        required: True
-        content:
-          application/json:
-            schema:
-              type: object
-              properties:
-                newLocation:
-                  $ref: '#/components/schemas/location'
-                notes:
-                  $ref: '#/components/schemas/notes'
-      responses:
-        200:
-          description: Rider object, showing all trackers assigned to rider
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/RiderTrackers'
-  /riders/{rider_id}/{checkpoint_id}/arrival:
-    post:
-      parameters:
-        - $ref: '#/components/parameters/RiderId'
-        - $ref: '#/components/parameters/CheckpointID'
-      tags:
-        - riders
-        - races
-      summary: Assign arrival of a rider to a checkpoint
-      requestBody:
-        required: false
-        description: Optional datetime, otherwise datetime calculated by server at request time
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/dateTime'
-      responses:
-        200:
-          description: Successfully assigned rider to checkpoint
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/CheckpointList'
+#    delete:
+#      parameters:
+#        - $ref: '#/components/parameters/RiderId'
+#        - $ref: '#/components/parameters/TrackerId'
+#      tags:
+#        - riders
+#        - trackers
+#      summary: Remove a tracker possession from a rider
+#      requestBody:
+#        required: True
+#        content:
+#          application/json:
+#            schema:
+#              type: object
+#              properties:
+##                newLocation:
+##                  $ref: '#/components/schemas/location'
+#                notes:
+#                  $ref: '#/components/schemas/notes'
+#      responses:
+#        200:
+#          description: Rider object, showing all trackers assigned to rider
+#          content:
+#            application/json:
+#              schema:
+#                $ref: '#/components/schemas/RiderTrackers'
+#  /riders/{rider_id}/{checkpoint_id}/arrival:
+#    post:
+#      parameters:
+#        - $ref: '#/components/parameters/RiderId'
+#        - $ref: '#/components/parameters/CheckpointID'
+#      tags:
+#        - riders
+#        - races
+#      summary: Assign arrival of a rider to a checkpoint
+#      requestBody:
+#        required: false
+#        description: Optional datetime, otherwise datetime calculated by server at request time
+#        content:
+#          application/json:
+#            schema:
+#              $ref: '#/components/schemas/dateTime'
+#      responses:
+#        200:
+#          description: Successfully assigned rider to checkpoint
+#          content:
+#            application/json:
+#              schema:
+#                $ref: '#/components/schemas/CheckpointList'
 #  /races/{checkpoint_id}:
 #    parameters:
 #      - $ref: '#/components/parameters/CheckpointID'

@@ -1,16 +1,44 @@
 from marshmallow import fields, Schema, RAISE
 from marshmallow_sqlalchemy import ModelSchema
-from .models import TrackerLocations, Trackers, Riders, Locations
+from tracker.models import TrackerLocations, Trackers, Riders, Locations, RiderNotes, RiderEvents
 
 
-class RiderSchema(ModelSchema):
+class RiderNotesSerializer(ModelSchema):
+    class Meta:
+        model = RiderNotes
+        fields = (
+            'datetime',
+            'notes'
+        )
+
+
+class RiderEventsSerializer(ModelSchema):
+    class Meta:
+        model = RiderEvents
+
+
+class RiderSerializer(ModelSchema):
     firstName = fields.String(attribute='first_name')
     lastName = fields.String(attribute='last_name')
     capNumber = fields.String(attribute='cap_number')
+    notes = fields.Nested(RiderNotesSerializer, many=True)
+    events = fields.Nested(RiderEventsSerializer, many=True)
+    tracker_assigned = fields.Nested(Trackers, many=True)
 
     class Meta:
         model = Riders
+        fields = (
+            'id',
+            'firstName',
+            'lastName',
+            'email',
+            'category',
+            'notes',
+            'events',
+            'trackers_assigned',
+            'capNumber'
 
+        )
 
 # todo fix this!!!
 class TrackerSchema(ModelSchema):
@@ -20,41 +48,11 @@ class TrackerSchema(ModelSchema):
     warrantyExpiry = fields.Date(attribute='warranty_expiry')
     loanStatus = fields.String(attribute='loan_status')
     purchaseDate = fields.Date(attribute='purchase_date')
-    rider = fields.Nested(RiderSchema)
+    rider = fields.Nested(RiderSerializer)
 
     class Meta:
         model = Trackers
         fields = ('id', 'esnNumber', 'workingStatus', 'loanStatus', 'purchaseDate')
-
-
-class RiderResponseSchema(RiderSchema):
-    tracker = fields.Nested(TrackerSchema, many=True)
-
-    class Meta:
-        model = Riders
-        fields = ('id', 'firstName', 'lastName', 'capNumber', 'trackers', 'email', 'category')
-
-
-class RiderPostSchema(ModelSchema):
-    firstName = fields.String(attribute='first_name', required=True)
-    lastName = fields.String(attribute='last_name', required=True)
-    capNumber = fields.String(attribute='cap_number', required=True)
-    email = fields.Email(required=True)
-
-    class Meta:
-        model = Riders
-        fields = ('firstName', 'lastName', 'capNumber', 'trackers', 'email', 'category')
-
-
-class RiderPatchSchema(ModelSchema):
-    firstName = fields.String(attribute='first_name')
-    lastName = fields.String(attribute='last_name')
-    capNumber = fields.String(attribute='cap_number')
-    email = fields.Email()
-
-    class Meta:
-        model = Riders
-        fields = ('firstName', 'lastName', 'capNumber', 'trackers', 'email', 'category')
 
 
 class RiderAssignTracker(Schema):
@@ -86,10 +84,10 @@ class TrackerPatchSchema(ModelSchema):
         fields = ('esnNumber', 'workingStatus', 'lastTestDate', 'warrantyExpiry', 'owner')
 
 
-rider_response = RiderResponseSchema()
-riders_response = RiderResponseSchema(many=True)
-rider_post_request = RiderPostSchema(unknown=RAISE)
-rider_patch_request = RiderPatchSchema(unknown=RAISE)
+rider_response = RiderSerializer()
+riders_response = RiderSerializer(many=True)
+# rider_post_request = RiderPostSchema(unknown=RAISE)
+# rider_patch_request = RiderPatchSchema(unknown=RAISE)
 
 tracker_post_request = TrackerPostSchema(unknown=RAISE)
 tracker_response = TrackerSchema()
