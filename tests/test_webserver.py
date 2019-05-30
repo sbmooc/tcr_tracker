@@ -277,6 +277,12 @@ class TestRiderEndpoints(WebTests):
         mock_update.assert_called_with(mock.ANY, Trackers, {'esnNumber': '100'}, id=1)
         self.assertEqual(result.status_code, 204)
 
+    @mock.patch('tracker.webserver.db.create_')
+    @mock.patch('tracker.webserver.db.update')
+    def test_tracker_assignment_add(self, mock_create, mock_update):
+       pass
+
+
     # def test_add_tracker_to_rider(self):
     #     result = self.test_client.post('/riders/1/assignTracker', data={'trackerId': 142, 'depositPaid': 100})
     #     pass

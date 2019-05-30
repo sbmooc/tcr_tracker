@@ -27,7 +27,7 @@ def set_up_engine():
 
 
 @contextmanager
-def session_scope(commit=True):
+def session_scope(commit=False):
     """Provide a transactional scope around a series of operations."""
     engine = set_up_engine()
     Base.metadata.create_all(engine)
@@ -45,7 +45,7 @@ def session_scope(commit=True):
         yield session
 
 
-def create_(session, instance, commit=True):
+def create_(session, instance, commit=False):
     """
     Create a row in db.
 
@@ -66,7 +66,7 @@ def create_(session, instance, commit=True):
         return instance
 
 
-def create(session, model, commit=True, **kwargs):
+def create(session, model, commit=False, **kwargs):
     """
     Create a row in db.
 
@@ -110,7 +110,7 @@ def get_resources(session, start, end, model):
     return data, last_resource
 
 
-def get_or_create(session, model, commit=True, **kwargs):
+def get_or_create(session, model, commit=False, **kwargs):
     # todo docstring here
     instances = session.query(model).filter_by(**kwargs).all()
     if instances:
@@ -120,7 +120,7 @@ def get_or_create(session, model, commit=True, **kwargs):
         return instance, True
 
 
-def get_and_delete(session, model, commit=True, **kwargs):
+def get_and_delete(session, model, commit=False, **kwargs):
     # todo docstring here
     instances = session.query(model).filter_by(**kwargs).all()
     if instances:
@@ -133,13 +133,13 @@ def get_and_delete(session, model, commit=True, **kwargs):
         return False
 
 
-def update(session, model, update_, commit=True, **kwargs):
+def update(session, model, to_be_updated: dict, commit=False, **filter_):
     # todo docstring here
-    n_rows_updated = session.query(model).filter_by(**kwargs).update(update_)
+    n_rows_updated = session.query(model).filter_by(**filter_).update(to_be_updated)
     if n_rows_updated > 0:
         if commit:
             session.commit()
-            return get(session, model, **kwargs)
+        return get(session, model, **filter_)
     else:
         return False
 

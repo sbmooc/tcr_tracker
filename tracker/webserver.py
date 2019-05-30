@@ -131,7 +131,7 @@ def tracker_assignment_add(rider_id, tracker_id):
     now = datetime.now()
     request_payload = request.get_json()
     with db.session_scope() as session:
-        db.update(
+        rider = db.update(
             session,
             Trackers,
             {
@@ -140,8 +140,12 @@ def tracker_assignment_add(rider_id, tracker_id):
             **{
                 'id': tracker_id,
             },
-            commit=False
         )
+        tracker = db.get(session, Trackers, **{id: tracker_id})
+        if not tracker:
+            return app.response_class(status=404, response='Tracker not found')
+        elif not rider:
+            return app.response_class(status=404, response='Rider not found')
         created_tracker_event = db.create_(
             session,
             TrackerEvents(
@@ -150,7 +154,6 @@ def tracker_assignment_add(rider_id, tracker_id):
                 event_type='add_tracker_assignment',
                 tracker=tracker_id
             ),
-            commit=False
         )
         session.flush()
         db.create_(
@@ -161,7 +164,6 @@ def tracker_assignment_add(rider_id, tracker_id):
                 user=None,
                 event=created_tracker_event.id
             ),
-            commit=False
         )
         created_rider_event = db.create_(
             session,
@@ -172,7 +174,6 @@ def tracker_assignment_add(rider_id, tracker_id):
                 balance_change=request_payload['depositAmount'],
                 rider=rider_id
             ),
-            commit=False
         )
         db.create_(
             session,
@@ -183,9 +184,17 @@ def tracker_assignment_add(rider_id, tracker_id):
                 user=None,
                 event=created_rider_event.id
             ),
-            commit=False
         )
-        session.commit()
+        try:
+            session.commit()
+        except:
+            print('There has been an exception here!')
+            session.rollback()
+            raise
+        return app.response_class(
+            status=200,
+            response=sl.rider_change_tracker_state.dumps(rider)
+        )
 
 @app.route('/riders/<int:rider_id>/trackers/<int:tracker_id>/removeTrackerAssignment',
            methods=['POST'])

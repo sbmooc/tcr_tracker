@@ -84,6 +84,16 @@ class TrackerPatchSchema(ModelSchema):
         fields = ('esnNumber', 'workingStatus', 'lastTestDate', 'warrantyExpiry', 'owner')
 
 
+class RiderChangeTrackerState(ModelSchema):
+
+    trackers = fields.Nested(Trackers)
+    depositBalance = fields.Float(attribute='balance')
+
+    class Meta:
+        model = Riders
+        fields = ('trackers', 'id', 'depositBalance')
+
+
 rider_response = RiderSerializer()
 riders_response = RiderSerializer(many=True)
 # rider_post_request = RiderPostSchema(unknown=RAISE)
@@ -93,6 +103,7 @@ tracker_post_request = TrackerPostSchema(unknown=RAISE)
 tracker_response = TrackerSchema()
 trackers_response = TrackerSchema(many=True)
 tracker_patch_request = TrackerPatchSchema()
+rider_change_tracker_state = RiderChangeTrackerState()
 
 
 
