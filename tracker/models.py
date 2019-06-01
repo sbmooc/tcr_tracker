@@ -12,7 +12,6 @@ from sqlalchemy import (
     Enum,
     DATE
 )
-from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import relationship, class_mapper, ColumnProperty
 
 from tracker.db_interactions import Base
