@@ -125,69 +125,113 @@ def patch_tracker(id):
         else:
             return app.response_class(status=204)
 
+
+def _check_rider_tracker_status(session, rider_id, tracker_id):
+    tracker = db.get(session, Trackers, **{id: tracker_id})
+    rider = db.get(session, Riders, **{id: rider_id})
+    if not tracker:
+        return app.response_class(status=404, response='Tracker not found')
+    elif not rider:
+        return app.response_class(status=404, response='Rider not found')
+    else:
+        return tracker, rider
+
+
+def _create_event(session, model, user_id, datetime, event_type, tracker_id, **kwargs):
+    return db.create_(
+        session,
+        model(
+            user_id=user_id,
+            datetime=datetime,
+            event_type=event_type,
+            tracker=tracker_id
+        ),
+    )
+
+
+def _create_notes(session, model, datetime, id_to_link_notes_to, user_id, notes, event_id):
+    return db.create_(
+        session,
+        model(
+            tracker=id_to_link_notes_to,
+            datetime=datetime,
+            user=user_id,
+            event=event_id,
+            notes=notes
+        ),
+    )
+
+
 @app.route('/riders/<int:rider_id>/trackers/<int:tracker_id>/addTrackerAssignment',
            methods=['POST'])
 def tracker_assignment_add(rider_id, tracker_id):
     now = datetime.now()
     request_payload = request.get_json()
     with db.session_scope() as session:
-        rider = db.update(
+        tracker, rider = _check_rider_tracker_status(session, rider_id, tracker_id)
+        db.update(
             session,
             Trackers,
             {
-                'rider_assigned': None
+                'rider_assigned': rider_id
             },
             **{
                 'id': tracker_id,
             },
         )
-        tracker = db.get(session, Trackers, **{id: tracker_id})
-        if not tracker:
-            return app.response_class(status=404, response='Tracker not found')
-        elif not rider:
-            return app.response_class(status=404, response='Rider not found')
-        created_tracker_event = db.create_(
+        created_tracker_event = _create_event(
             session,
-            TrackerEvents(
-                user_id=None,
-                datetime=now,
-                event_type='add_tracker_assignment',
-                tracker=tracker_id
-            ),
+            TrackerEvents,
+            None,
+            now,
+            'add_tracker_assignment',
+            tracker_id
+        )
+        _create_notes(
+            session,
+            TrackerNotes,
+            now,
+            tracker_id,
+            None,
+            request_payload['notes'],
+            created_tracker_event.id
         )
         session.flush()
-        db.create_(
+        created_rider_event = _create_event(
             session,
-            TrackerNotes(
-                tracker=tracker_id,
-                datetime=now,
-                user=None,
-                event=created_tracker_event.id
-            ),
+            RiderEvents,
+            None,
+            now,
+            'payment_out',
+            rider_id,
+            **{
+                'balance_change': request_payload['depositAmount']
+            }
         )
-        created_rider_event = db.create_(
+        session.flush()
+        _create_notes(
             session,
-            RiderEvents(
-                user_id=None,
-                datetime=now,
-                event_type='payment_out',
-                balance_change=request_payload['depositAmount'],
-                rider=rider_id
-            ),
+            RiderNotes,
+            now,
+            rider_id,
+            None,
+            request_payload['notes'],
+            created_rider_event.id
         )
-        db.create_(
+        db.update(
             session,
-            RiderNotes(
-                rider=rider_id,
-                datetime=now,
-                notes=request_payload['notes'],
-                user=None,
-                event=created_rider_event.id
-            ),
+            Riders,
+            {
+                'deposit_balance': rider.balance - request_payload['depositAmount']
+            },
+            **{
+                'id': rider_id
+            }
         )
         try:
             session.commit()
         except:
+            # todo put in logging!!!
             print('There has been an exception here!')
             session.rollback()
             raise
@@ -199,8 +243,80 @@ def tracker_assignment_add(rider_id, tracker_id):
 @app.route('/riders/<int:rider_id>/trackers/<int:tracker_id>/removeTrackerAssignment',
            methods=['POST'])
 def tracker_assignment_remove(rider_id, tracker_id):
-    pass
-
+    now = datetime.now()
+    request_payload = request.get_json()
+    with db.session_scope() as session:
+        tracker, rider = _check_rider_tracker_status(session, rider_id, tracker_id)
+        db.update(
+            session,
+            Trackers,
+            {
+                'rider_assigned': None
+            },
+            **{
+                'id': tracker_id,
+            },
+        )
+        created_tracker_event = _create_event(
+            session,
+            TrackerEvents,
+            None,
+            now,
+            'remove_tracker_assignment',
+            tracker_id
+        )
+        _create_notes(
+            session,
+            TrackerNotes,
+            now,
+            tracker_id,
+            None,
+            request_payload['notes'],
+            created_tracker_event.id
+        )
+        session.flush()
+        created_rider_event = _create_event(
+            session,
+            RiderEvents,
+            None,
+            now,
+            'payment_in',
+            rider_id,
+            **{
+                'balance_change': request_payload['depositAmount']
+            }
+        )
+        session.flush()
+        _create_notes(
+            session,
+            RiderNotes,
+            now,
+            rider_id,
+            None,
+            request_payload['notes'],
+            created_rider_event.id
+        )
+        db.update(
+            session,
+            Riders,
+            {
+                'deposit_balance': rider.balance + request_payload['depositAmount']
+            },
+            **{
+                'id': rider_id
+            }
+        )
+        try:
+            session.commit()
+        except:
+            # todo put in logging!!!
+            print('There has been an exception here!')
+            session.rollback()
+            raise
+        return app.response_class(
+            status=200,
+            response=sl.rider_change_tracker_state.dumps(rider)
+        )
 @app.route('/riders/<int:rider_id>/trackers/<int:tracker_id>/trackerPossession',
            methods=['POST'])
 def tracker_possession_post(rider_id, tracker_id):

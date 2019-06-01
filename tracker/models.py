@@ -141,7 +141,7 @@ class Riders(Base, BaseMixin):
     category = Column('category', Enum(RiderCategories, validate_strings=True))
     notes = relationship('RiderNotes')
     events = relationship('RiderEvents')
-    balance = Column('balance', Float)
+    balance = Column('balance', Float, default=0)
     # todo link riders who are in pairs? or does the capnumber do that???
     # todo add checkpoints stuff!
 
