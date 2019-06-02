@@ -40,7 +40,23 @@ class RiderSerializer(ModelSchema):
 
         )
 
-# todo fix this!!!
+
+class RidersInTrackers(ModelSchema):
+    firstName = fields.String(attribute='first_name')
+    lastName = fields.String(attribute='last_name')
+    capNumber = fields.String(attribute='cap_number')
+
+    class Meta:
+        model = Riders
+        fields = (
+            'id',
+            'capNumber',
+            'firstName',
+            'lastName',
+            'capNumber'
+        )
+
+
 class TrackerSchema(ModelSchema):
     esnNumber = fields.String(attribute='esn_number')
     workingStatus = fields.String(attribute='working_status')
@@ -48,11 +64,31 @@ class TrackerSchema(ModelSchema):
     warrantyExpiry = fields.Date(attribute='warranty_expiry')
     loanStatus = fields.String(attribute='loan_status')
     purchaseDate = fields.Date(attribute='purchase_date')
-    rider = fields.Nested(RiderSerializer)
+    rider = fields.Nested(RidersInTrackers, default=None)
 
     class Meta:
         model = Trackers
-        fields = ('id', 'esnNumber', 'workingStatus', 'loanStatus', 'purchaseDate')
+        fields = ('id',
+                  'esnNumber',
+                  'workingStatus',
+                  'loanStatus',
+                  'lastTestDate',
+                  'purchaseDate',
+                  'rider',
+                  'warrantyExpiry')
+
+
+class TrackerInRiders(ModelSchema):
+
+    esnNumber = fields.String(attribute='esn_number')
+    workingStatus = fields.String(attribute='working_status')
+
+    class Meta:
+        model = Trackers
+        fields = ('id',
+                  'esnNumber',
+                  'workingStatus'
+                  )
 
 
 class RiderAssignTracker(Schema):
@@ -86,24 +122,24 @@ class TrackerPatchSchema(ModelSchema):
 
 class RiderChangeTrackerState(ModelSchema):
 
-    trackers = fields.Nested(Trackers)
+    trackers_assigned = fields.Nested(TrackerInRiders, many=True)
     depositBalance = fields.Float(attribute='balance')
 
     class Meta:
         model = Riders
-        fields = ('trackers', 'id', 'depositBalance')
+        fields = (
+            'trackers_assigned',
+            'id',
+            'depositBalance',
+        )
 
 
-rider_response = RiderSerializer()
-riders_response = RiderSerializer(many=True)
-# rider_post_request = RiderPostSchema(unknown=RAISE)
-# rider_patch_request = RiderPatchSchema(unknown=RAISE)
-
-tracker_post_request = TrackerPostSchema(unknown=RAISE)
-tracker_response = TrackerSchema()
-trackers_response = TrackerSchema(many=True)
-tracker_patch_request = TrackerPatchSchema()
+single_rider = RiderSerializer()
+many_riders = RiderSerializer(many=True)
 rider_change_tracker_state = RiderChangeTrackerState()
+
+single_tracker = TrackerSchema()
+many_trackers = TrackerSchema(many=True)
 
 
 

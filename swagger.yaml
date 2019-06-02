@@ -744,6 +744,8 @@ components:
           $ref: '#/components/schemas/RiderTrackerList'
         depositBalance:
           $ref: '#/components/schemas/DepositAmount'
+        id:
+          $ref: '#/components/schemas/RiderId'
     RiderTrackerList:
       type: array
       items:

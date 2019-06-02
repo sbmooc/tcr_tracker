@@ -16,7 +16,7 @@ def post_riders():
     post_data = request.get_json()
     with db.session_scope() as session:
         data = db.create(session, Riders, **post_data)
-        return app.response_class(response=sl.rider_response.dumps(data).data,
+        return app.response_class(response=sl.single_rider.dumps(data).data,
                                   status=201,
                                   mimetype='application/json')
 
@@ -38,7 +38,7 @@ def get_riders():
             # return some sort of 4xx status
             return app.response_class(status=416)
         else:
-            return app.response_class(response=sl.riders_response.dumps(data),
+            return app.response_class(response=sl.many_riders.dumps(data),
                                       status=200,
                                       mimetype='application/json')
 
@@ -48,7 +48,7 @@ def get_rider(id):
     with db.session_scope() as session:
         data = db.get(session, Riders, **request.view_args)
         if data:
-            return app.response_class(response=sl.rider_response.dumps(data),
+            return app.response_class(response=sl.single_rider.dumps(data),
                                       mimetype='application/json')
         else:
             return app.response_class(status=204)

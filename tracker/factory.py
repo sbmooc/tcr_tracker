@@ -1,3 +1,5 @@
+from datetime import datetime
+
 from sqlalchemy import create_engine
 from sqlalchemy.orm import scoped_session, sessionmaker
 import factory
@@ -18,6 +20,10 @@ class TrackerFactory(factory.alchemy.SQLAlchemyModelFactory):
     esn_number = factory.Sequence(lambda x: str(x+100000))
     working_status = 'working'
     owner = 'Lost Dot'
+    loan_status = 'with_rider'
+    warranty_expiry = datetime(2020, 1, 1)
+    purchase_date = datetime(2018, 1, 1)
+    last_test_date = datetime(2018, 6, 1)
 
 
 class RiderFactory(factory.alchemy.SQLAlchemyModelFactory):
@@ -26,7 +32,12 @@ class RiderFactory(factory.alchemy.SQLAlchemyModelFactory):
         sqlalchemy_session = session
 
     id = factory.Sequence(lambda n: n+1)
+    cap_number = factory.Sequence(lambda n: str(n+1))
     first_name = factory.Sequence(lambda x: str('Rider'+ str(x+1)))
     last_name = factory.Sequence(lambda x: str('Taylor'+ str(x+1)))
     email = 'email@email.com'
+    trackers_assigned = factory.List([
+        factory.SubFactory(TrackerFactory)
+    ])
+    balance = 100
 
