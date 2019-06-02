@@ -56,8 +56,9 @@ class TrackerSerializer(ModelSchema):
 
 class TrackerInRiders(ModelSchema):
 
-    esnNumber = fields.String(attribute='esn_number')
-    workingStatus = fields.String(attribute='working_status')
+    esnNumber = fields.String(attribute='tracker.esn_number')
+    workingStatus = fields.String(attribute='tracker.working_status')
+    id = fields.Integer(attribute='tracker.id')
 
     class Meta:
         model = Trackers

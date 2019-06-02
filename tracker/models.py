@@ -95,13 +95,46 @@ class RiderAssignment(Base):
     __tablename__ = 'rider_assignment'
     id = Column('id', Integer, primary_key=True)
     rider = Column('rider', ForeignKey('riders.id'))
+    tracker = relationship('Trackers')
 
 
 class RiderPossession(Base):
     __tablename__ = 'rider_possession'
     id = Column('id', Integer, primary_key=True)
     rider = Column('rider', ForeignKey('riders.id'))
+    tracker = relationship('Trackers')
 
+
+class TrackerAssignment(Base):
+    __tablename__ = 'tracker_assignment'
+    id = Column('id', Integer, primary_key=True)
+    tracker = Column('tracker', ForeignKey('trackers.id'))
+    rider = relationship('Riders')
+
+
+class TrackerPossession(Base):
+    __tablename__ = 'tracker_possession'
+    id = Column('id', Integer, primary_key=True)
+    tracker = Column('tracker', ForeignKey('trackers.id'))
+    rider = relationship('Riders')
+
+
+class Riders(Base, ):
+
+    __tablename__ = 'riders'
+    id = Column(Integer, primary_key=True, autoincrement=True)
+    first_name = Column('first_name', String)
+    last_name = Column('last_name', String)
+    email = Column('email', String)
+    cap_number = Column('cap_number', String)
+    category = Column('category', Enum(RiderCategories, validate_strings=True))
+    notes = relationship('RiderNotes')
+    tracker_assigned = Column('tracker_assigned', ForeignKey('tracker_assignment.id'))
+    tracker_possesed = Column('tracker_possesed', ForeignKey('tracker_possession.id'))
+    events = relationship('RiderEvents')
+    balance = Column('balance', Float, default=0)
+    # todo link riders who are in pairs? or does the capnumber do that???
+    # todo add checkpoints stuff!
 
 class TrackerLocations(Base, ):
 
@@ -117,25 +150,6 @@ class Locations(Base, ):
     id = Column('id', Integer, primary_key=True)
     location = Column(String, unique=True)
     # trackers = relationship('Trackers')
-
-
-class Riders(Base, ):
-
-    __tablename__ = 'riders'
-    id = Column(Integer, primary_key=True, autoincrement=True)
-    first_name = Column('first_name', String)
-    last_name = Column('last_name', String)
-    email = Column('email', String)
-    cap_number = Column('cap_number', String)
-    trackers_assigned = relationship('RiderAssignment')
-    trackers_possession = relationship('RiderPossession')
-    category = Column('category', Enum(RiderCategories, validate_strings=True))
-    notes = relationship('RiderNotes')
-    events = relationship('RiderEvents')
-    balance = Column('balance', Float, default=0)
-    # todo link riders who are in pairs? or does the capnumber do that???
-    # todo add checkpoints stuff!
-
 
 class RiderNotes(Base, ):
     __tablename__ = 'rider_notes'

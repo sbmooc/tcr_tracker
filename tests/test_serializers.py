@@ -5,6 +5,7 @@ import tracker.serializers as sl
 
 
 # todo add events and notes to serializer
+from tracker.models import TrackerAssignment
 
 
 class TestSerializers(TestCase):
@@ -17,8 +18,14 @@ class TestSerializers(TestCase):
         cls.tracker.rider = cls.rider
         cls.tracker2 = TrackerFactory(loan_status='not_loaned')
         cls.tracker3 = TrackerFactory(loan_status='not_loaned')
-        cls.rider.trackers_assigned = [cls.tracker]
-        cls.rider2.trackers_assigned = [cls.tracker2]
+        cls.tracker_assigned1 = TrackerAssignment(
+            tracker=cls.tracker
+        )
+        cls.tracker_assigned2 = TrackerAssignment(
+            tracker=cls.tracker2
+        )
+        cls.rider.trackers_assigned = [cls.tracker_assigned1]
+        cls.rider2.trackers_assigned = [cls.tracker_assigned2]
 
     def test_rider_change_tracker_state(self):
 
@@ -142,7 +149,7 @@ class TestSerializers(TestCase):
                 }
             ]
         }
-        self.rider.trackers_assigned.append(self.tracker2)
+        self.rider.trackers_assigned.append(self.tracker_assigned2)
         data = sl.single_rider.dump(self.rider)
         self.assertDictEqual(expected_result, data)
 
