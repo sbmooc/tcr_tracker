@@ -4,16 +4,21 @@ from tracker.factory import RiderFactory, TrackerFactory
 import tracker.serializers as sl
 
 
+# todo add events and notes to serializer
+
+
 class TestSerializers(TestCase):
 
-    def setUp(self):
-
-        self.rider = RiderFactory()
-        self.rider2 = RiderFactory()
-        self.tracker = TrackerFactory()
-        self.tracker.rider = self.rider
-        self.tracker2 = TrackerFactory(loan_status='not_loaned')
-        self.tracker3 = TrackerFactory(loan_status='not_loaned')
+    @classmethod
+    def setUpClass(cls) -> None:
+        cls.rider = RiderFactory()
+        cls.rider2 = RiderFactory()
+        cls.tracker = TrackerFactory()
+        cls.tracker.rider = cls.rider
+        cls.tracker2 = TrackerFactory(loan_status='not_loaned')
+        cls.tracker3 = TrackerFactory(loan_status='not_loaned')
+        cls.rider.trackers_assigned = [cls.tracker]
+        cls.rider2.trackers_assigned = [cls.tracker2]
 
     def test_rider_change_tracker_state(self):
 
@@ -34,8 +39,8 @@ class TestSerializers(TestCase):
 
     def test_single_tracker(self):
         expected_result = {
-            'id': 2,
-            'esnNumber': '100001',
+            'id': 1,
+            'esnNumber': '100000',
             'workingStatus': 'working',
             'lastTestDate': '2018-06-01',
             'warrantyExpiry': '2020-01-01',
@@ -55,8 +60,8 @@ class TestSerializers(TestCase):
     def test_multiple_trackers(self):
         expected_result = [
             {
-                'id': 2,
-                'esnNumber': '100001',
+                'id': 1,
+                'esnNumber': '100000',
                 'workingStatus': 'working',
                 'lastTestDate': '2018-06-01',
                 'warrantyExpiry': '2020-01-01',
@@ -70,8 +75,8 @@ class TestSerializers(TestCase):
                 }
             },
             {
-                'id': 3,
-                'esnNumber': '100002',
+                'id': 2,
+                'esnNumber': '100001',
                 'workingStatus': 'working',
                 'lastTestDate': '2018-06-01',
                 'warrantyExpiry': '2020-01-01',
@@ -80,8 +85,8 @@ class TestSerializers(TestCase):
                 'rider': None
             },
             {
-                'id': 4,
-                'esnNumber': '100003',
+                'id': 3,
+                'esnNumber': '100002',
                 'workingStatus': 'working',
                 'lastTestDate': '2018-06-01',
                 'warrantyExpiry': '2020-01-01',
@@ -137,7 +142,7 @@ class TestSerializers(TestCase):
                 }
             ]
         }
-        self.rider.trackers_assigned.append(self.tracker)
+        self.rider.trackers_assigned.append(self.tracker2)
         data = sl.single_rider.dump(self.rider)
         self.assertDictEqual(expected_result, data)
 

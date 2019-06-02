@@ -33,7 +33,7 @@ class RidersInTrackers(ModelSchema):
         )
 
 
-class TrackerSchema(ModelSchema):
+class TrackerSerializer(ModelSchema):
     esnNumber = fields.String(attribute='esn_number')
     workingStatus = fields.String(attribute='working_status')
     lastTestDate = fields.Date(attribute='last_test_date')
@@ -90,34 +90,6 @@ class RiderSerializer(ModelSchema):
 
         )
 
-class RiderAssignTracker(Schema):
-    trackerId = fields.String(attribute='tracker_id', required=True)
-    depositPaid = fields.String(attribute='deposit_paid', required=True)
-
-
-class TrackerPostSchema(ModelSchema):
-
-    esnNumber = fields.String(attribute='esn_number')
-    workingStatus = fields.String(attribute='working_status')
-    lastTestDate = fields.Date(attribute='last_test')
-    warrantyExpiry = fields.Date(attribute='warranty_expiry')
-
-    class Meta:
-        model = Trackers
-        fields = ('esnNumber', 'workingStatus', 'lastTestDate', 'warrantyExpiry', 'owner')
-
-
-class TrackerPatchSchema(ModelSchema):
-
-    esnNumber = fields.String(attribute='esn_number')
-    workingStatus = fields.String(attribute='working_status')
-    lastTestDate = fields.Date(attribute='last_test')
-    warrantyExpiry = fields.Date(attribute='warranty_expiry')
-
-    class Meta:
-        model = Trackers
-        fields = ('esnNumber', 'workingStatus', 'lastTestDate', 'warrantyExpiry', 'owner')
-
 
 class RiderChangeTrackerState(ModelSchema):
 
@@ -137,8 +109,8 @@ single_rider = RiderSerializer()
 many_riders = RiderSerializer(many=True)
 rider_change_tracker_state = RiderChangeTrackerState()
 
-single_tracker = TrackerSchema()
-many_trackers = TrackerSchema(many=True)
+single_tracker = TrackerSerializer()
+many_trackers = TrackerSerializer(many=True)
 
 
 

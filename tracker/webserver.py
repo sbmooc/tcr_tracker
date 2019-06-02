@@ -70,11 +70,11 @@ def patch_rider(id):
 
 
 @app.route('/trackers', methods=['POST'])
-def post_trackers():
+def post_tracker():
     post_data = request.get_json()
     with db.session_scope() as session:
         data = db.create(session, Trackers, **post_data)
-        return app.response_class(response=sl.tracker_response.dumps(data).data,
+        return app.response_class(response=sl.single_tracker.dumps(data),
                                   status=201,
                                   mimetype='application/json')
 
@@ -96,7 +96,7 @@ def get_trackers():
             # return some sort of 4xx status
             return app.response_class(status=416)
         else:
-            return app.response_class(response=sl.trackers_response.dumps(data),
+            return app.response_class(response=sl.many_trackers.dumps(data),
                                       status=200,
                                       mimetype='application/json')
 
@@ -106,7 +106,7 @@ def get_tracker(id):
     with db.session_scope() as session:
         data = db.get(session, Trackers, **request.view_args)
         if data:
-            return app.response_class(response=sl.tracker_response.dumps(data),
+            return app.response_class(response=sl.single_tracker.dumps(data),
                                       mimetype='application/json')
         else:
             return app.response_class(status=204)
@@ -119,7 +119,7 @@ def patch_tracker(id):
     with db.session_scope() as session:
         data = db.update(session, Trackers, data_to_update, **request.view_args)
         if data:
-            return app.response_class(response=sl.tracker_response.dumps(data),
+            return app.response_class(response=sl.single_tracker.dumps(data),
                                       status=200,
                                       mimetype='application/json')
         else:
@@ -137,14 +137,23 @@ def _check_rider_tracker_status(session, rider_id, tracker_id):
         return tracker, rider
 
 
-def _create_event(session, model, user_id, datetime, event_type, tracker_id, **kwargs):
+def _create_event(
+        session,
+        model,
+        user_id,
+        datetime,
+        event_type,
+        tracker_id,
+        **kwargs
+):
     return db.create_(
         session,
         model(
             user_id=user_id,
             datetime=datetime,
             event_type=event_type,
-            tracker=tracker_id
+            tracker=tracker_id,
+            **kwargs,
         ),
     )
 

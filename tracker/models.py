@@ -1,6 +1,4 @@
 import enum
-import json
-from datetime import datetime
 
 from sqlalchemy import (
     Column,
@@ -12,26 +10,9 @@ from sqlalchemy import (
     Enum,
     DATE
 )
-from sqlalchemy.orm import relationship, class_mapper, ColumnProperty
+from sqlalchemy.orm import relationship
 
 from tracker.db_interactions import Base
-
-class DateTimeEncoder(json.JSONEncoder):
-
-    def default(self, o):
-        if isinstance(o, datetime):
-            return o.timestamp()
-        return json.JSONEncoder.default(self, o)
-
-
-class BaseMixin(object):
-    # todo this looks to be for serializing json and probably isn't needed.
-    def as_dict(self):
-        result = {}
-        for prop in class_mapper(self.__class__).iterate_properties:
-            if isinstance(prop, ColumnProperty):
-                result[prop.key] = getattr(self, prop.key)
-        return result
 
 
 class WorkingStatus(enum.Enum):
@@ -92,7 +73,7 @@ class TrackerEventCategories(enum.Enum):
     remove_tracker_possession = 6
 
 
-class Trackers(Base, BaseMixin):
+class Trackers(Base, ):
 
     __tablename__ = 'trackers'
     id = Column('id', Integer, primary_key=True)
@@ -105,13 +86,24 @@ class Trackers(Base, BaseMixin):
     purchase_date = Column('purchase', DATE)
     warranty_expiry = Column('warranty', DATE)
     owner = Column('owner', Enum(OwnerChoices))
-    rider_assigned = Column('rider_assigned', ForeignKey('riders.id'))
-    # rider_possess = Column('rider_possess', ForeignKey('riders.id'))
-    # location = relationship('tracker_locations')
-    # todo - how to show possession???
+    rider_assigned = Column('rider_assigned', ForeignKey('rider_assignment.id'))
+    rider_possess = Column('rider_possess', ForeignKey('rider_possession.id'))
+    #location = relationship('tracker_locations')
 
 
-class TrackerLocations(Base, BaseMixin):
+class RiderAssignment(Base):
+    __tablename__ = 'rider_assignment'
+    id = Column('id', Integer, primary_key=True)
+    rider = Column('rider', ForeignKey('riders.id'))
+
+
+class RiderPossession(Base):
+    __tablename__ = 'rider_possession'
+    id = Column('id', Integer, primary_key=True)
+    rider = Column('rider', ForeignKey('riders.id'))
+
+
+class TrackerLocations(Base, ):
 
     __tablename__ = 'tracker_locations'
     id = Column('id', Integer, primary_key=True)
@@ -120,14 +112,14 @@ class TrackerLocations(Base, BaseMixin):
     # location = Column('location', ForeignKey('locations.id'))
 
 
-class Locations(Base, BaseMixin):
+class Locations(Base, ):
     __tablename__ = 'locations'
     id = Column('id', Integer, primary_key=True)
     location = Column(String, unique=True)
     # trackers = relationship('Trackers')
 
 
-class Riders(Base, BaseMixin):
+class Riders(Base, ):
 
     __tablename__ = 'riders'
     id = Column(Integer, primary_key=True, autoincrement=True)
@@ -135,8 +127,8 @@ class Riders(Base, BaseMixin):
     last_name = Column('last_name', String)
     email = Column('email', String)
     cap_number = Column('cap_number', String)
-    trackers_assigned = relationship('Trackers')
-    # trackers_possession = relationship('Trackers', back_populates='rider_possess')
+    trackers_assigned = relationship('RiderAssignment')
+    trackers_possession = relationship('RiderPossession')
     category = Column('category', Enum(RiderCategories, validate_strings=True))
     notes = relationship('RiderNotes')
     events = relationship('RiderEvents')
@@ -145,7 +137,7 @@ class Riders(Base, BaseMixin):
     # todo add checkpoints stuff!
 
 
-class RiderNotes(Base, BaseMixin):
+class RiderNotes(Base, ):
     __tablename__ = 'rider_notes'
     id = Column('id', Integer, primary_key=True)
     rider = Column(Integer, ForeignKey('riders.id'))
@@ -155,7 +147,7 @@ class RiderNotes(Base, BaseMixin):
     event = Column(Integer, ForeignKey('rider_events.id'))
 
 
-class TrackerNotes(Base, BaseMixin):
+class TrackerNotes(Base, ):
     __tablename__ = 'tracker_notes'
     id = Column('id', Integer, primary_key=True)
     tracker = Column(Integer, ForeignKey('trackers.id'))
@@ -164,7 +156,7 @@ class TrackerNotes(Base, BaseMixin):
     event = Column(Integer, ForeignKey('tracker_events.id'))
 
 
-class RiderEvents(Base, BaseMixin):
+class RiderEvents(Base, ):
     __tablename__ = 'rider_events'
     id = Column('id', Integer, primary_key=True)
     user_id = Column(Integer, ForeignKey('users.id'))
@@ -175,7 +167,7 @@ class RiderEvents(Base, BaseMixin):
     rider = Column(Integer, ForeignKey('riders.id'))
 
 
-class TrackerEvents(Base, BaseMixin):
+class TrackerEvents(Base, ):
     __tablename__ = 'tracker_events'
     id = Column('id', Integer, primary_key=True, autoincrement=True)
     user_id = Column(Integer, ForeignKey('users.id'))
@@ -185,7 +177,7 @@ class TrackerEvents(Base, BaseMixin):
     tracker = Column(Integer, ForeignKey('trackers.id'))
 
 
-class Users(Base, BaseMixin):
+class Users(Base, ):
     __tablename__ = 'users'
     id = Column('id', Integer, primary_key=True)
 
