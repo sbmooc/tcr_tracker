@@ -95,28 +95,28 @@ class RiderAssignment(Base):
     __tablename__ = 'rider_assignment'
     id = Column('id', Integer, primary_key=True)
     rider = Column('rider', ForeignKey('riders.id'))
-    tracker = relationship('Trackers')
+    tracker = relationship('Trackers', uselist=False)
 
 
 class RiderPossession(Base):
     __tablename__ = 'rider_possession'
     id = Column('id', Integer, primary_key=True)
     rider = Column('rider', ForeignKey('riders.id'))
-    tracker = relationship('Trackers')
+    tracker = relationship('Trackers', uselist=False)
 
 
 class TrackerAssignment(Base):
     __tablename__ = 'tracker_assignment'
     id = Column('id', Integer, primary_key=True)
     tracker = Column('tracker', ForeignKey('trackers.id'))
-    rider = relationship('Riders')
+    rider = relationship('Riders', uselist=False)
 
 
 class TrackerPossession(Base):
     __tablename__ = 'tracker_possession'
     id = Column('id', Integer, primary_key=True)
     tracker = Column('tracker', ForeignKey('trackers.id'))
-    rider = relationship('Riders')
+    rider = relationship('Riders', uselist=False)
 
 
 class Riders(Base, ):

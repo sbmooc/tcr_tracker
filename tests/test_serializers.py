@@ -16,7 +16,7 @@ class TestSerializers(TestCase):
         cls.rider2 = RiderFactory()
         cls.tracker = TrackerFactory()
         cls.tracker.rider = cls.rider
-        cls.tracker2 = TrackerFactory(loan_status='not_loaned')
+        cls.tracker2 = TrackerFactory()
         cls.tracker3 = TrackerFactory(loan_status='not_loaned')
         cls.tracker_assigned1 = TrackerAssignment(
             tracker=cls.tracker
@@ -87,7 +87,7 @@ class TestSerializers(TestCase):
                 'workingStatus': 'working',
                 'lastTestDate': '2018-06-01',
                 'warrantyExpiry': '2020-01-01',
-                'loanStatus': 'not_loaned',
+                'loanStatus': 'with_rider',
                 'purchaseDate': '2018-01-01',
                 'rider': None
             },
