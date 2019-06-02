@@ -40,4 +40,5 @@ class RiderFactory(factory.alchemy.SQLAlchemyModelFactory):
         factory.SubFactory(TrackerFactory)
     ])
     balance = 100
+    category = 'male'
 

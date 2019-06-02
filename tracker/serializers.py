@@ -17,30 +17,6 @@ class RiderEventsSerializer(ModelSchema):
         model = RiderEvents
 
 
-class RiderSerializer(ModelSchema):
-    firstName = fields.String(attribute='first_name')
-    lastName = fields.String(attribute='last_name')
-    capNumber = fields.String(attribute='cap_number')
-    notes = fields.Nested(RiderNotesSerializer, many=True)
-    events = fields.Nested(RiderEventsSerializer, many=True)
-    tracker_assigned = fields.Nested(Trackers, many=True)
-
-    class Meta:
-        model = Riders
-        fields = (
-            'id',
-            'firstName',
-            'lastName',
-            'email',
-            'category',
-            'notes',
-            'events',
-            'trackers_assigned',
-            'capNumber'
-
-        )
-
-
 class RidersInTrackers(ModelSchema):
     firstName = fields.String(attribute='first_name')
     lastName = fields.String(attribute='last_name')
@@ -90,6 +66,29 @@ class TrackerInRiders(ModelSchema):
                   'workingStatus'
                   )
 
+
+class RiderSerializer(ModelSchema):
+    firstName = fields.String(attribute='first_name')
+    lastName = fields.String(attribute='last_name')
+    capNumber = fields.String(attribute='cap_number')
+    notes = fields.Nested(RiderNotesSerializer, many=True)
+    events = fields.Nested(RiderEventsSerializer, many=True)
+    trackers_assigned = fields.Nested(TrackerInRiders, many=True)
+
+    class Meta:
+        model = Riders
+        fields = (
+            'id',
+            'firstName',
+            'lastName',
+            'email',
+            'category',
+            'notes',
+            'events',
+            'trackers_assigned',
+            'capNumber'
+
+        )
 
 class RiderAssignTracker(Schema):
     trackerId = fields.String(attribute='tracker_id', required=True)

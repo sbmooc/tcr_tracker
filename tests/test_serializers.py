@@ -9,13 +9,11 @@ class TestSerializers(TestCase):
     def setUp(self):
 
         self.rider = RiderFactory()
+        self.rider2 = RiderFactory()
         self.tracker = TrackerFactory()
         self.tracker.rider = self.rider
         self.tracker2 = TrackerFactory(loan_status='not_loaned')
         self.tracker3 = TrackerFactory(loan_status='not_loaned')
-        RiderFactory()
-        RiderFactory()
-        RiderFactory()
 
     def test_rider_change_tracker_state(self):
 
@@ -93,12 +91,94 @@ class TestSerializers(TestCase):
             },
         ]
         data = sl.many_trackers.dump([self.tracker, self.tracker2, self.tracker3])
-        self.maxDiff = None
         self.assertCountEqual(expected_result, data)
 
     def test_rider(self):
-        pass
+        expected_result = {
+            'firstName': 'Rider1',
+            'lastName': 'Taylor1',
+            'capNumber': '1',
+            'notes': [],
+            'events': [],
+            'email': 'email@email.com',
+            'category': 'male',
+            'id': 1,
+            'trackers_assigned': [
+                {
+                    'id': 1,
+                    'esnNumber': '100000',
+                    'workingStatus': 'working'
+                }
+            ]
+        }
+        data = sl.single_rider.dump(self.rider)
+        self.assertDictEqual(expected_result, data)
 
-    def test_riders(self):
-        pass
+    def test_rider_multiple_trackers(self):
+        expected_result = {
+            'firstName': 'Rider1',
+            'lastName': 'Taylor1',
+            'capNumber': '1',
+            'notes': [],
+            'events': [],
+            'email': 'email@email.com',
+            'category': 'male',
+            'id': 1,
+            'trackers_assigned': [
+                {
+                    'id': 1,
+                    'esnNumber': '100000',
+                    'workingStatus': 'working'
+                },
+                {
+                    'id': 2,
+                    'esnNumber': '100001',
+                    'workingStatus': 'working'
+                }
+            ]
+        }
+        self.rider.trackers_assigned.append(self.tracker)
+        data = sl.single_rider.dump(self.rider)
+        self.assertDictEqual(expected_result, data)
+
+    def test_multiple_riders(self):
+        expected_result = [
+            {
+                'firstName': 'Rider1',
+                'lastName': 'Taylor1',
+                'capNumber': '1',
+                'notes': [],
+                'events': [],
+                'email': 'email@email.com',
+                'category': 'male',
+                'id': 1,
+                'trackers_assigned': [
+                    {
+                        'id': 1,
+                        'esnNumber': '100000',
+                        'workingStatus': 'working'
+                    }
+                ]
+            },
+            {
+                'firstName': 'Rider2',
+                'lastName': 'Taylor2',
+                'capNumber': '2',
+                'notes': [],
+                'events': [],
+                'email': 'email@email.com',
+                'category': 'male',
+                'id': 2,
+                'trackers_assigned': [
+                    {
+                        'id': 2,
+                        'esnNumber': '100001',
+                        'workingStatus': 'working'
+                    }
+                ]
+            }
+        ]
+
+        data = sl.many_riders.dump([self.rider, self.rider2])
+        self.assertCountEqual(expected_result, data)
 
