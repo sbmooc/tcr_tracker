@@ -127,8 +127,8 @@ def patch_tracker(id):
 
 
 def _check_rider_tracker_status(session, rider_id, tracker_id):
-    tracker = db.get(session, Trackers, **{id: tracker_id})
-    rider = db.get(session, Riders, **{id: rider_id})
+    tracker = db.get(session, Trackers, **{'id': tracker_id})
+    rider = db.get(session, Riders, **{'id': rider_id})
     if not tracker:
         return app.response_class(status=404, response='Tracker not found')
     elif not rider:

@@ -21,16 +21,18 @@ def set_up_engine():
     db_uri = ''
     if db_type is not None and db_uri is not None:
         engine_ = create_engine(db_type + db_uri)
+        Base.metadata.create_all(engine_)
     else:
         engine_ = None
     return engine_
 
+engine = set_up_engine()
 
 @contextmanager
-def session_scope(commit=False):
+def session_scope(commit=False, engine=engine):
     """Provide a transactional scope around a series of operations."""
-    engine = set_up_engine()
-    Base.metadata.create_all(engine)
+    if not engine:
+        engine = set_up_engine()
     session = Session(bind=engine)
     if commit:
         try:
